@@ -1,0 +1,4 @@
+.env
+brief-api/target/
+*.class
+*.jar

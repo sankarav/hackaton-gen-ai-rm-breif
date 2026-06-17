@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rmbrief}
+    username: ${SPRING_DATASOURCE_USERNAME:rm}
+    password: ${SPRING_DATASOURCE_PASSWORD:rm}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: 6379
+      connect-timeout: 2000
+      timeout: 2000
+  cache:
+    type: none  # overridden to 'redis' when app.cache.enabled=true
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Application-level config — adjust without rebuilding
+app:
+  cache:
+    enabled: false   # set to true to enable Redis response caching
+  delta:
+    large-outflow-threshold: 10000   # dollars
+    dormancy-days: 90
+  agent:
+    eager-tool-calls: true   # false = let Claude plan which tools to call
+  plaid:
+    env: ${PLAID_ENV:sandbox}
