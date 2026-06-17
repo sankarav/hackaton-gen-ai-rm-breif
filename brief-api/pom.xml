@@ -80,14 +80,14 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- ── Added in later steps ──────────────────────────────────────────
-        Step 3: Plaid
+        <!-- Plaid Java SDK (Step 3) -->
         <dependency>
             <groupId>com.plaid</groupId>
             <artifactId>plaid-java</artifactId>
-            <version>...</version>
+            <version>35.0.0</version>
         </dependency>
 
+        <!-- ── Added in later steps ──────────────────────────────────────────
         Step 4+: Anthropic Java SDK
         <dependency>
             <groupId>com.anthropic</groupId>
