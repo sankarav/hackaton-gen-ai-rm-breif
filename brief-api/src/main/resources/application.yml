@@ -42,7 +42,7 @@ app:
   cache:
     enabled: false   # set to true to enable Redis response caching
   delta:
-    large-outflow-threshold: 10000   # dollars
+    large-outflow-threshold: 1500    # dollars — lowered for sandbox demo (real data has no $50k txn yet)
     dormancy-days: 90
   agent:
     eager-tool-calls: true   # false = let Claude plan which tools to call
