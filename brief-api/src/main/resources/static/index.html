@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RM Pre-Meeting Brief</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f4f6f9;
+    color: #1a2332;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: #0a2342;
+    color: white;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  header .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  header .tagline { font-size: 13px; color: #8ba7c7; }
+
+  /* ── Main layout ── */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 48px;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 20px;
+  }
+
+  /* ── Controls bar ── */
+  .controls {
+    background: white;
+    border-radius: 10px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .controls label { font-size: 13px; font-weight: 600; color: #6b7a99; white-space: nowrap; }
+  .controls select {
+    flex: 1;
+    max-width: 320px;
+    padding: 9px 12px;
+    border: 1.5px solid #d0d7e3;
+    border-radius: 7px;
+    font-size: 14px;
+    color: #1a2332;
+    background: white;
+    cursor: pointer;
+    outline: none;
+  }
+  .controls select:focus { border-color: #2563eb; }
+  .btn {
+    padding: 9px 24px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #1d4ed8; }
+  .btn:disabled { background: #93a5c8; cursor: not-allowed; }
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #d1d5db;
+    flex-shrink: 0;
+  }
+  .status-dot.running { background: #f59e0b; animation: pulse 1s infinite; }
+  .status-dot.done { background: #10b981; animation: none; }
+  .status-dot.error { background: #ef4444; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Two-column workspace ── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ── Agent feed panel ── */
+  .feed-panel {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    overflow: hidden;
+    position: sticky;
+    top: 20px;
+  }
+  .panel-title {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #6b7a99;
+    border-bottom: 1px solid #eef0f5;
+    background: #f8f9fc;
+  }
+  .feed-log {
+    padding: 12px;
+    max-height: 520px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .feed-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+  .feed-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+  .feed-text { color: #374151; }
+  .feed-text.muted { color: #9ca3af; }
+  .feed-text.success { color: #059669; }
+  .feed-text.highlight { color: #d97706; font-weight: 600; }
+  .feed-text.done-text { color: #2563eb; font-weight: 600; }
+
+  /* ── Brief output ── */
+  .brief-panel { display: flex; flex-direction: column; gap: 16px; }
+
+  .brief-placeholder {
+    background: white;
+    border-radius: 10px;
+    padding: 60px 24px;
+    text-align: center;
+    color: #9ca3af;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .brief-placeholder .ph-icon { font-size: 40px; margin-bottom: 12px; }
+  .brief-placeholder p { font-size: 14px; }
+
+  /* Snapshot card */
+  .snapshot-card {
+    background: linear-gradient(135deg, #0a2342 0%, #1e3a5f 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(10,35,66,0.3);
+  }
+  .snapshot-name { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .snapshot-meta { font-size: 13px; color: #8ba7c7; margin-bottom: 16px; }
+  .snapshot-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .stat { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 14px; }
+  .stat-label { font-size: 11px; color: #8ba7c7; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 700; }
+
+  /* Section cards */
+  .section-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #6b7a99;
+    border-bottom: 1px solid #eef0f5;
+    background: #f8f9fc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .item { display: flex; flex-direction: column; gap: 6px; }
+  .item-summary { font-size: 14px; line-height: 1.5; color: #1a2332; }
+  .citations { display: flex; flex-wrap: wrap; gap: 4px; }
+  .citation-chip {
+    font-size: 10px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: #f0f4ff;
+    color: #3b5bdb;
+    border: 1px solid #c5d0f5;
+    border-radius: 4px;
+    padding: 2px 6px;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .item + .item { border-top: 1px solid #f0f2f7; padding-top: 12px; }
+
+  /* Watch-out severity */
+  .severity-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .sev-high { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .sev-med  { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .sev-low  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .watchout-header { display: flex; align-items: flex-start; gap: 8px; }
+
+  /* Talking points */
+  .talking-points { display: flex; flex-direction: column; gap: 10px; }
+  .talking-point {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #1a2332;
+  }
+  .tp-num {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    background: #2563eb;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+
+  /* Last interaction */
+  .recap-date { font-size: 12px; color: #6b7a99; margin-bottom: 6px; }
+  .recap-summary { font-size: 14px; line-height: 1.5; color: #1a2332; margin-bottom: 10px; }
+  .promises { display: flex; flex-direction: column; gap: 6px; }
+  .promise {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    color: #374151;
+    align-items: flex-start;
+  }
+  .promise::before { content: "↳"; color: #d97706; flex-shrink: 0; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">RM Intelligence</div>
+    <div class="tagline">Pre-Meeting Client Brief · Powered by Claude + Plaid Sandbox</div>
+  </div>
+</header>
+
+<main>
+  <!-- Controls -->
+  <div class="controls">
+    <label for="client-select">CLIENT</label>
+    <select id="client-select">
+      <option value="">Loading clients…</option>
+    </select>
+    <button class="btn" id="generate-btn" onclick="generate()" disabled>Generate Brief</button>
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text" style="font-size:13px;color:#6b7a99;"></span>
+  </div>
+
+  <!-- Workspace -->
+  <div class="workspace">
+
+    <!-- Agent activity feed -->
+    <div class="feed-panel">
+      <div class="panel-title">Agent Activity</div>
+      <div class="feed-log" id="feed-log">
+        <div class="feed-item">
+          <span class="feed-icon">💡</span>
+          <span class="feed-text muted">Select a client and click Generate Brief to start.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Brief output -->
+    <div class="brief-panel" id="brief-panel">
+      <div class="brief-placeholder">
+        <div class="ph-icon">📋</div>
+        <p>Your brief will appear here.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ── Bootstrap: load client list ──────────────────────────────────────────────
+(async () => {
+  try {
+    const res = await fetch('/clients');
+    const clients = await res.json();
+    const sel = document.getElementById('client-select');
+    sel.innerHTML = clients.map(c =>
+      `<option value="${c.clientId}">${c.fullName} · ${c.segment}</option>`
+    ).join('');
+    document.getElementById('generate-btn').disabled = false;
+  } catch (e) {
+    document.getElementById('client-select').innerHTML = '<option>Failed to load clients</option>';
+  }
+})();
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let evtSource = null;
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+async function generate() {
+  const clientId = document.getElementById('client-select').value;
+  if (!clientId) return;
+
+  // Reset UI
+  if (evtSource) evtSource.close();
+  document.getElementById('feed-log').innerHTML = '';
+  document.getElementById('brief-panel').innerHTML =
+    '<div class="brief-placeholder"><div class="ph-icon">⚙️</div><p>Agent running…</p></div>';
+  setStatus('running', 'Connecting…');
+  document.getElementById('generate-btn').disabled = true;
+
+  // POST to register intent (optional — SSE does the work)
+  await fetch(`/briefs/${clientId}`, { method: 'POST' }).catch(() => {});
+
+  // Open SSE stream
+  evtSource = new EventSource(`/briefs/${clientId}/stream`);
+
+  const iconMap = {
+    agent_start:     ['🚀', 'highlight'],
+    tool_call:       ['🔧', ''],
+    tool_result:     ['✅', 'success'],
+    tool_error:      ['❌', ''],
+    delta_start:     ['📊', 'highlight'],
+    delta_done:      ['📊', 'success'],
+    delta:           null,   // silent — data goes to brief panel
+    gather_complete: ['📦', 'highlight'],
+    synthesis_start: ['🤖', 'highlight'],
+    synthesis_done:  ['🤖', 'success'],
+    brief:           null,   // silent — rendered separately
+    done:            ['🏁', 'done-text'],
+    error:           ['💥', ''],
+  };
+
+  Object.keys(iconMap).forEach(evtName => {
+    evtSource.addEventListener(evtName, e => {
+      const data = JSON.parse(e.data);
+
+      if (evtName === 'delta') return; // skip — we don't render raw delta in feed
+
+      if (evtName === 'brief') {
+        renderBrief(data);
+        return;
+      }
+
+      if (evtName === 'done') {
+        setStatus('done', 'Complete');
+        document.getElementById('generate-btn').disabled = false;
+        evtSource.close();
+      }
+
+      if (evtName === 'error') {
+        setStatus('error', 'Error');
+        document.getElementById('generate-btn').disabled = false;
+        evtSource.close();
+      }
+
+      const [icon, cls] = iconMap[evtName] || ['•', ''];
+      addFeedItem(icon, data.message || '', cls);
+    });
+  });
+
+  evtSource.onerror = () => {
+    if (evtSource.readyState === EventSource.CLOSED) return;
+    addFeedItem('⚠️', 'Stream disconnected.', '');
+    setStatus('error', 'Disconnected');
+    document.getElementById('generate-btn').disabled = false;
+    evtSource.close();
+  };
+}
+
+// ── Feed helpers ──────────────────────────────────────────────────────────────
+function addFeedItem(icon, text, cls) {
+  const log = document.getElementById('feed-log');
+  const div = document.createElement('div');
+  div.className = 'feed-item';
+  div.innerHTML = `<span class="feed-icon">${icon}</span><span class="feed-text ${cls}">${escHtml(text)}</span>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setStatus(state, text) {
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot ' + state;
+  document.getElementById('status-text').textContent = text;
+}
+
+// ── Brief renderer ────────────────────────────────────────────────────────────
+function renderBrief(b) {
+  const panel = document.getElementById('brief-panel');
+  panel.innerHTML = [
+    renderSnapshot(b.snapshot, b.clientId),
+    renderChanged(b.changedSinceLastMeeting),
+    renderWatchOuts(b.watchOuts),
+    renderOpportunities(b.opportunities),
+    renderTalkingPoints(b.talkingPoints),
+    renderRecap(b.lastInteractionRecap),
+  ].join('');
+}
+
+function renderSnapshot(s, clientId) {
+  const trv = s.totalRelationshipValue.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  const tenure = s.tenureYears % 1 === 0 ? s.tenureYears : s.tenureYears.toFixed(1);
+  return `
+  <div class="snapshot-card">
+    <div class="snapshot-name">${escHtml(s.name)}</div>
+    <div class="snapshot-meta">${escHtml(clientId)} · ${escHtml(s.segment)}</div>
+    <div class="snapshot-stats">
+      <div class="stat">
+        <div class="stat-label">Total Relationship Value</div>
+        <div class="stat-value">${trv}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Tenure</div>
+        <div class="stat-value">${tenure} yrs</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderChanged(items) {
+  return section('📈', 'Changed Since Last Meeting', items.map(i =>
+    `<div class="item">
+       <div class="item-summary">${escHtml(i.summary)}</div>
+       ${citationChips(i.citations)}
+     </div>`
+  ).join(''));
+}
+
+function renderWatchOuts(items) {
+  return section('⚠️', 'Watch-Outs', items.map(i =>
+    `<div class="item">
+       <div class="watchout-header">
+         <div class="item-summary">${escHtml(i.summary)}</div>
+         <span class="severity-badge sev-${i.severity}">${i.severity}</span>
+       </div>
+       ${citationChips(i.citations)}
+     </div>`
+  ).join(''));
+}
+
+function renderOpportunities(items) {
+  return section('💡', 'Opportunities', items.map(i =>
+    `<div class="item">
+       <div class="item-summary">${escHtml(i.summary)}</div>
+       ${citationChips(i.citations)}
+     </div>`
+  ).join(''));
+}
+
+function renderTalkingPoints(points) {
+  const inner = `<div class="talking-points">` +
+    points.map((p, i) =>
+      `<div class="talking-point"><div class="tp-num">${i+1}</div><div>${escHtml(p)}</div></div>`
+    ).join('') +
+  `</div>`;
+  return `<div class="section-card">
+    <div class="section-header">🗣️ Talking Points</div>
+    <div class="section-body">${inner}</div>
+  </div>`;
+}
+
+function renderRecap(r) {
+  if (!r) return '';
+  const promises = (r.openPromises || []).map(p =>
+    `<div class="promise">${escHtml(p)}</div>`
+  ).join('');
+  return `<div class="section-card">
+    <div class="section-header">📝 Last Interaction</div>
+    <div class="section-body">
+      <div class="recap-date">${escHtml(r.date)}</div>
+      <div class="recap-summary">${escHtml(r.summary)}</div>
+      ${promises ? `<div class="promises">${promises}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+function section(icon, title, innerHtml) {
+  return `<div class="section-card">
+    <div class="section-header">${icon} ${escHtml(title)}</div>
+    <div class="section-body">${innerHtml || '<p style="color:#9ca3af;font-size:13px">None</p>'}</div>
+  </div>`;
+}
+
+function citationChips(ids) {
+  if (!ids || ids.length === 0) return '';
+  return `<div class="citations">${ids.map(id =>
+    `<span class="citation-chip" title="${escHtml(id)}">${escHtml(id)}</span>`
+  ).join('')}</div>`;
+}
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
