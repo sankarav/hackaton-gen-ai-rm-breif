@@ -6,6 +6,8 @@ import com.anthropic.core.JsonValue;
 import com.anthropic.models.messages.*;
 import com.demo.rmbrief.delta.ChangeReport;
 import com.demo.rmbrief.delta.DeltaService;
+import com.demo.rmbrief.llm.BriefSchema;
+import com.demo.rmbrief.llm.SynthesisService;
 import com.demo.rmbrief.tools.CrmContextService;
 import com.demo.rmbrief.tools.PlaidToolService;
 import com.demo.rmbrief.tools.ToolResult;
@@ -34,12 +36,15 @@ public class AgentOrchestrator {
     private final PlaidToolService plaidTools;
     private final CrmContextService crmContext;
     private final DeltaService deltaService;
+    private final SynthesisService synthesisService;
     private final AnthropicClient anthropic;
 
-    public AgentOrchestrator(PlaidToolService plaidTools, CrmContextService crmContext, DeltaService deltaService) {
+    public AgentOrchestrator(PlaidToolService plaidTools, CrmContextService crmContext,
+                             DeltaService deltaService, SynthesisService synthesisService) {
         this.plaidTools = plaidTools;
         this.crmContext = crmContext;
         this.deltaService = deltaService;
+        this.synthesisService = synthesisService;
         this.anthropic = AnthropicOkHttpClient.fromEnv();
     }
 
@@ -72,7 +77,16 @@ public class AgentOrchestrator {
             emitter.step("delta_done", deltaSummary);
             log.info("[agent] {}", deltaSummary);
 
-            emitter.step("gather_complete", "Data gather complete — ready for synthesis.");
+            emitter.step("gather_complete", "Data gather complete — starting synthesis…");
+
+            // Final Claude synthesis call — prose from structured facts only
+            emitter.step("synthesis_start", "Claude synthesizing brief from ChangeReport…");
+            BriefSchema brief = synthesisService.synthesize(clientId, report);
+            emitter.brief(brief);
+            emitter.step("synthesis_done", "Brief generated with " +
+                brief.watchOuts().size() + " watch-outs, " +
+                brief.opportunities().size() + " opportunities, " +
+                brief.talkingPoints().size() + " talking points.");
             emitter.complete();
 
         } catch (Exception e) {
