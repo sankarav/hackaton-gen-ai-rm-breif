@@ -87,7 +87,8 @@ public class PlaidBootstrapService {
 
     /**
      * Plants a synthetic large outflow transaction into a sandbox item.
-     * Uses sandbox/transactions/create; call before running transactions/sync.
+     * Plaid sandbox always assigns custom transactions to the default depository account —
+     * per-account targeting is not supported by the API.
      */
     public void plantTransaction(String accessToken, double amount, String name, LocalDate date) throws IOException {
         CustomSandboxTransaction txn = new CustomSandboxTransaction()
@@ -106,6 +107,20 @@ public class PlaidBootstrapService {
                 plaidApi.sandboxTransactionsCreate(req).execute();
         assertSuccess(resp, "sandboxTransactionsCreate");
         log.info("Transaction planted successfully");
+    }
+
+    /**
+     * Clears the stored Plaid credentials for a client so bootstrapClient will
+     * re-run the full public_token flow on the next call.
+     */
+    @Transactional
+    public void clearPlaidItem(String clientId) {
+        clientRepository.findById(clientId).ifPresent(c -> {
+            c.setPlaidAccessToken(null);
+            c.setPlaidItemId(null);
+            clientRepository.save(c);
+            log.info("Cleared Plaid item for client {}", clientId);
+        });
     }
 
     public String getPlaidItemId(String clientId) {

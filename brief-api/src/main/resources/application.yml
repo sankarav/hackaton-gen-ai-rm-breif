@@ -42,7 +42,7 @@ app:
   cache:
     enabled: false   # set to true to enable Redis response caching
   delta:
-    large-outflow-threshold: 1500    # dollars — lowered for sandbox demo (real data has no $50k txn yet)
+    large-outflow-threshold: 5000    # dollars — catches $50k wire + GUSTO PAY, filters card auto-pay noise
     dormancy-days: 90
   agent:
     eager-tool-calls: true   # false = let Claude plan which tools to call

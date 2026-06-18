@@ -32,12 +32,18 @@ public class AdminController {
     @PostMapping("/seed-client")
     public ResponseEntity<SeedClientResponse> seedClient(@RequestBody SeedClientRequest req) {
         try {
+            // force=true: clear existing Plaid item so bootstrap creates a fresh one
+            if (Boolean.TRUE.equals(req.force())) {
+                bootstrapService.clearPlaidItem(req.clientId());
+            }
+
             Client client = bootstrapService.bootstrapClient(req.clientId(), req.persona());
 
             if (req.plantLargeOutflow()) {
                 double amount = req.outflowAmount() != null ? req.outflowAmount() : 50000.00;
                 // 7 days ago: within Plaid's 14-day posting window and inside the 30-day delta window
                 LocalDate txDate = LocalDate.now().minusDays(7);
+
                 bootstrapService.plantTransaction(
                         client.getPlaidAccessToken(),
                         amount,
@@ -56,7 +62,6 @@ public class AdminController {
                     new SeedClientResponse(req.clientId(), null, "ERROR: " + e.getMessage()));
         } catch (IOException | RuntimeException e) {
             log.error("seed-client failed for {}: {}", req.clientId(), e.getMessage(), e);
-            // Include itemId if bootstrap succeeded but plant failed
             String itemId = null;
             try { itemId = bootstrapService.getPlaidItemId(req.clientId()); } catch (Exception ignored) {}
             return ResponseEntity.internalServerError().body(
@@ -68,7 +73,8 @@ public class AdminController {
             String clientId,
             String persona,              // e.g. "user_good", "user_yuppie" — null = Plaid default
             boolean plantLargeOutflow,   // inject a synthetic $50k outflow (hero demo)
-            Double outflowAmount         // override the default $50k if needed
+            Double outflowAmount,        // override the default $50k if needed
+            Boolean force                // true = clear existing Plaid item and re-bootstrap
     ) {}
 
     public record SeedClientResponse(
