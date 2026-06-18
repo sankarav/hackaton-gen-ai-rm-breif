@@ -87,14 +87,12 @@
             <version>35.0.0</version>
         </dependency>
 
-        <!-- ── Added in later steps ──────────────────────────────────────────
-        Step 4+: Anthropic Java SDK
+        <!-- Anthropic Java SDK (Step 6) -->
         <dependency>
             <groupId>com.anthropic</groupId>
             <artifactId>anthropic-java</artifactId>
-            <version>...</version>
+            <version>2.40.1</version>
         </dependency>
-        ──────────────────────────────────────────────────────────────────── -->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
