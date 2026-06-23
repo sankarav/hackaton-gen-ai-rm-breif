@@ -205,8 +205,30 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
   }
+  .citation-chip:hover { background: #dbe4ff; }
+  .citation-chip.unresolved { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .citation-chip.unresolved:hover { background: #fde8e8; }
   .item + .item { border-top: 1px solid #f0f2f7; padding-top: 12px; }
+
+  /* Citation popover */
+  .citation-popover {
+    position: absolute;
+    z-index: 1000;
+    background: #1a2332;
+    color: white;
+    border-radius: 8px;
+    padding: 10px 14px;
+    max-width: 280px;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .citation-popover .cp-label { font-weight: 700; margin-bottom: 4px; }
+  .citation-popover .cp-detail { color: #cbd5e1; white-space: pre-line; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; }
 
   /* Watch-out severity */
   .severity-badge {
@@ -327,6 +349,7 @@
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let evtSource = null;
+let citationIndex = {}; // citationId -> { label, detail }
 
 // ── Generate ──────────────────────────────────────────────────────────────────
 async function generate() {
@@ -335,6 +358,8 @@ async function generate() {
 
   // Reset UI
   if (evtSource) evtSource.close();
+  citationIndex = {};
+  closePopover();
   document.getElementById('feed-log').innerHTML = '';
   document.getElementById('brief-panel').innerHTML =
     '<div class="brief-placeholder"><div class="ph-icon">⚙️</div><p>Agent running…</p></div>';
@@ -367,7 +392,10 @@ async function generate() {
     evtSource.addEventListener(evtName, e => {
       const data = JSON.parse(e.data);
 
-      if (evtName === 'delta') return; // skip — we don't render raw delta in feed
+      if (evtName === 'delta') {
+        buildCitationIndex(data);
+        return; // raw delta not rendered in feed, just indexed for citation lookups
+      }
 
       if (evtName === 'brief') {
         renderBrief(data);
@@ -414,6 +442,75 @@ function setStatus(state, text) {
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot ' + state;
   document.getElementById('status-text').textContent = text;
+}
+
+// ── Citation index (resolves chip IDs back to real ChangeReport records) ──────
+function buildCitationIndex(report) {
+  const idx = {};
+
+  (report.accountSummaries || []).forEach(a => {
+    idx[a.accountId] = {
+      label: a.name,
+      detail: [
+        a.type + (a.subtype ? ' · ' + a.subtype : ''),
+        a.currentBalance != null ? 'Balance: ' + fmtCurrency(a.currentBalance) : null,
+        'Account ID: ' + a.accountId,
+      ].filter(Boolean).join('\n'),
+    };
+  });
+
+  (report.largeOutflows || []).forEach(o => {
+    idx[o.transactionId] = {
+      label: o.description || 'Transaction',
+      detail: [
+        fmtCurrency(o.amount) + ' on ' + o.date,
+        o.description,
+        'Transaction ID: ' + o.transactionId,
+      ].filter(Boolean).join('\n'),
+    };
+  });
+
+  (report.maturityAlerts || []).forEach(m => {
+    idx[m.productType] = {
+      label: m.productType,
+      detail: [
+        fmtCurrency(m.balance) + ' maturing ' + m.maturityDate + ' (' + m.daysUntilMaturity + ' days)',
+        m.rate != null ? 'Rate: ' + (m.rate * 100).toFixed(2) + '%' : null,
+      ].filter(Boolean).join('\n'),
+    };
+  });
+
+  citationIndex = idx;
+}
+
+function fmtCurrency(n) {
+  return Number(n).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+// ── Citation popover ────────────────────────────────────────────────────────
+function showCitation(evt, id) {
+  evt.stopPropagation();
+  const entry = citationIndex[id];
+  closePopover();
+
+  const pop = document.createElement('div');
+  pop.className = 'citation-popover';
+  pop.id = 'citation-popover';
+  pop.innerHTML = entry
+    ? `<div class="cp-label">${escHtml(entry.label)}</div><div class="cp-detail">${escHtml(entry.detail)}</div>`
+    : `<div class="cp-label">Unresolved citation</div><div class="cp-detail">No matching record was found in the ChangeReport for "${escHtml(id)}".</div>`;
+
+  document.body.appendChild(pop);
+  const rect = evt.target.getBoundingClientRect();
+  pop.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
+  pop.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+
+  setTimeout(() => document.addEventListener('click', closePopover, { once: true }), 0);
+}
+
+function closePopover() {
+  const existing = document.getElementById('citation-popover');
+  if (existing) existing.remove();
 }
 
 // ── Brief renderer ────────────────────────────────────────────────────────────
@@ -516,9 +613,13 @@ function section(icon, title, innerHtml) {
 
 function citationChips(ids) {
   if (!ids || ids.length === 0) return '';
-  return `<div class="citations">${ids.map(id =>
-    `<span class="citation-chip" title="${escHtml(id)}">${escHtml(id)}</span>`
-  ).join('')}</div>`;
+  return `<div class="citations">${ids.map(id => {
+    const resolved = !!citationIndex[id];
+    const display = (citationIndex[id] && citationIndex[id].label) || id;
+    return `<button type="button" class="citation-chip${resolved ? '' : ' unresolved'}"
+      onclick="showCitation(event, '${id.replace(/'/g, "\\'")}')"
+      title="${escHtml(id)}">${escHtml(display)}</button>`;
+  }).join('')}</div>`;
 }
 
 function escHtml(s) {
