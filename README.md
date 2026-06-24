@@ -1,5 +1,7 @@
 # RM Pre-Meeting Intelligence Brief
 
+> 🎥 **Demo recording:** [youtube.com/watch?v=jKShU4F57ng](https://www.youtube.com/watch?v=jKShU4F57ng)
+
 An **agentic AI service** that generates a one-page, fully-cited pre-meeting brief for a bank
 Relationship Manager from a single client ID — in seconds. Grounded in **Plaid Sandbox** data
 plus a synthetic PostgreSQL CRM. Everything runs locally via Docker Compose; the only external
@@ -12,6 +14,8 @@ calls are to Plaid Sandbox and the Anthropic API.
 > cost-benefit: [`cba/cost-benefit-analysis.md`](cba/cost-benefit-analysis.md) ·
 > models: [`docs/model-usage.md`](docs/model-usage.md) ·
 > prompts: [`prompts/`](prompts/).
+
+![Pre-meeting brief example](docs/screenshots/brief-example.png)
 
 ## What it does
 
