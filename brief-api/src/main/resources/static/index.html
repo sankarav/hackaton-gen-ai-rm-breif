@@ -283,6 +283,15 @@
     align-items: flex-start;
   }
   .promise::before { content: "↳"; color: #d97706; flex-shrink: 0; font-weight: 700; }
+
+  /* Print: brief content only, no chrome / activity feed / whitespace columns */
+  @media print {
+    header, .controls, .feed-panel, #print-btn, #citation-popover { display: none !important; }
+    body, main { background: #fff !important; margin: 0; padding: 0; }
+    .workspace { display: block !important; }
+    .brief-panel { box-shadow: none !important; }
+    .citation-chip { border: 1px solid #999 !important; }
+  }
 </style>
 </head>
 <body>
@@ -302,6 +311,7 @@
       <option value="">Loading clients…</option>
     </select>
     <button class="btn" id="generate-btn" onclick="generate()" disabled>Generate Brief</button>
+    <button class="btn" id="print-btn" onclick="window.print()" style="display:none;">Print / Save as PDF</button>
     <div class="status-dot" id="status-dot"></div>
     <span id="status-text" style="font-size:13px;color:#6b7a99;"></span>
   </div>
@@ -365,6 +375,7 @@ async function generate() {
     '<div class="brief-placeholder"><div class="ph-icon">⚙️</div><p>Agent running…</p></div>';
   setStatus('running', 'Connecting…');
   document.getElementById('generate-btn').disabled = true;
+  document.getElementById('print-btn').style.display = 'none';
 
   // POST to register intent (optional — SSE does the work)
   await fetch(`/briefs/${clientId}`, { method: 'POST' }).catch(() => {});
@@ -405,6 +416,7 @@ async function generate() {
       if (evtName === 'done') {
         setStatus('done', 'Complete');
         document.getElementById('generate-btn').disabled = false;
+        document.getElementById('print-btn').style.display = 'inline-block';
         evtSource.close();
       }
 
