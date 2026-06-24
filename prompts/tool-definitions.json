@@ -1,0 +1,71 @@
+{
+  "_comment": "Tool catalog passed to Claude in LLM-driven gather mode (app.agent.eager-tool-calls=false). Built by AgentOrchestrator.buildToolDefinitions(). All tools are read-only. Each maps to a Java method that calls Plaid Sandbox or the Postgres CRM.",
+  "tools": [
+    {
+      "name": "getCrmContext",
+      "description": "Retrieve CRM context for a bank client: last meeting date, notes, open promises, segment, relationship tenure, and synthetic products (CDs, term deposits).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "clientId": { "type": "string", "description": "The bank client ID (e.g. client_001)" }
+        },
+        "required": ["clientId"]
+      }
+    },
+    {
+      "name": "getAccounts",
+      "description": "Retrieve all Plaid-linked bank accounts with current balances for the client.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "clientId": { "type": "string", "description": "The bank client ID" }
+        },
+        "required": ["clientId"]
+      }
+    },
+    {
+      "name": "getTransactions",
+      "description": "Retrieve all transactions from Plaid for the client using the sync cursor (returns all available transactions).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "clientId": { "type": "string", "description": "The bank client ID" }
+        },
+        "required": ["clientId"]
+      }
+    },
+    {
+      "name": "getHoldings",
+      "description": "Retrieve investment holdings and securities from Plaid for the client.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "clientId": { "type": "string", "description": "The bank client ID" }
+        },
+        "required": ["clientId"]
+      }
+    },
+    {
+      "name": "getLiabilities",
+      "description": "Retrieve liabilities (credit cards, mortgages, student loans) from Plaid for the client.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "clientId": { "type": "string", "description": "The bank client ID" }
+        },
+        "required": ["clientId"]
+      }
+    },
+    {
+      "name": "getIdentity",
+      "description": "Retrieve identity information (names, emails, phone numbers) from Plaid for the client.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "clientId": { "type": "string", "description": "The bank client ID" }
+        },
+        "required": ["clientId"]
+      }
+    }
+  ]
+}
