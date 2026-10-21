@@ -33,6 +33,8 @@ PLAID_ENV=sandbox
 
 `SPRING_DATASOURCE_URL`, `SPRING_DATA_REDIS_HOST` are injected by `docker-compose.yml` and must not be set in `.env`.
 
+**Corporate AI gateway:** set `SPRING_PROFILES_ACTIVE=gateway` plus `ANTHROPIC_GATEWAY_URL`, `ANTHROPIC_GATEWAY_API_KEY`, `ANTHROPIC_GATEWAY_KEY_HEADER` in `.env`. The `gateway` profile (bottom of `application.yml`) sends the key only in that header, never as `x-api-key`. All Claude calls share the one `AnthropicClient` bean from `AnthropicConfig` — never call `AnthropicOkHttpClient.fromEnv()` directly.
+
 `MEDIA_ENCRYPTION_KEY` (base64 AES-256, `openssl rand -base64 32`) is also required — compose refuses to start without it. Changing it makes previously stored capture media unreadable.
 
 ## Key endpoints
@@ -144,7 +146,7 @@ Static UI is a single file at `brief-api/src/main/resources/static/index.html` (
 - **`ddl-auto: none`** — Flyway owns the schema; Hibernate does no validation.
 - **`ObjectMapper`** is not auto-wired in Spring Boot 4 — use `private static final ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules()`.
 - **`Map.of()` rejects null values** — use `Map<String, Object> m = new LinkedHashMap<>()` with explicit type (not `var`) when mapping Plaid response fields that may be null.
-- **`anthropic-java` 2.41.0**: `AnthropicOkHttpClient.fromEnv()` reads `ANTHROPIC_API_KEY`. For multi-turn tool-use loops, use `params.toBuilder().addMessage(response).addUserMessageOfBlockParams(toolResults).build()` to extend the conversation. `StopReason` comparison: use `"tool_use".equals(response.stopReason().map(Object::toString).orElse(""))`.
+- **`anthropic-java` 2.40.1**: the client is built in `AnthropicConfig` from `app.anthropic.*` (base URL, key, optional custom key header). For multi-turn tool-use loops, use `params.toBuilder().addMessage(response).addUserMessageOfBlockParams(toolResults).build()` to extend the conversation. `StopReason` comparison: use `"tool_use".equals(response.stopReason().map(Object::toString).orElse(""))`.
 
 - **Error messages**: Boot 4 uses `spring.web.error.include-message` (not `server.error.*`) to put `ResponseStatusException` reasons in the response body.
 

@@ -1,7 +1,6 @@
 package com.demo.rmbrief.agent;
 
 import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.core.JsonValue;
 import com.anthropic.models.messages.*;
 import com.demo.rmbrief.delta.ChangeReport;
@@ -43,12 +42,13 @@ public class AgentOrchestrator {
     private final AnthropicClient anthropic;
 
     public AgentOrchestrator(PlaidToolService plaidTools, CrmContextService crmContext,
-                             DeltaService deltaService, SynthesisService synthesisService) {
+                             DeltaService deltaService, SynthesisService synthesisService,
+                             AnthropicClient anthropic) {
         this.plaidTools = plaidTools;
         this.crmContext = crmContext;
         this.deltaService = deltaService;
         this.synthesisService = synthesisService;
-        this.anthropic = AnthropicOkHttpClient.fromEnv();
+        this.anthropic = anthropic;
     }
 
     // ── public entry point ─────────────────────────────────────────────────────

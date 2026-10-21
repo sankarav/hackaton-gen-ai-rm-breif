@@ -1,7 +1,6 @@
 package com.demo.rmbrief.capture.extract;
 
 import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.core.JsonValue;
 import com.anthropic.models.messages.ContentBlockParam;
 import com.anthropic.models.messages.MessageCreateParams;
@@ -22,10 +21,11 @@ public class CaptureLlm {
 
     private static final Logger log = LoggerFactory.getLogger(CaptureLlm.class);
 
-    private final AnthropicClient client = AnthropicOkHttpClient.fromEnv();
+    private final AnthropicClient client;
     private final String model;
 
-    public CaptureLlm(@Value("${app.capture.model}") String model) {
+    public CaptureLlm(AnthropicClient client, @Value("${app.capture.model}") String model) {
+        this.client = client;
         this.model = model;
     }
 

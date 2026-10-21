@@ -1,7 +1,6 @@
 package com.demo.rmbrief.llm;
 
 import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.models.messages.*;
 import com.demo.rmbrief.delta.ChangeReport;
 import com.demo.rmbrief.tools.CrmContextService;
@@ -83,9 +82,10 @@ public class SynthesisService {
     private final AnthropicClient anthropic;
     private final String model;
 
-    public SynthesisService(CrmContextService crmContextService, @Value("${app.brief.model}") String model) {
+    public SynthesisService(CrmContextService crmContextService, AnthropicClient anthropic,
+                            @Value("${app.brief.model}") String model) {
         this.crmContextService = crmContextService;
-        this.anthropic = AnthropicOkHttpClient.fromEnv();
+        this.anthropic = anthropic;
         this.model = model;
     }
 

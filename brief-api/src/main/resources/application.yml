@@ -83,3 +83,27 @@ app:
   temporal:
     target: ${TEMPORAL_TARGET:localhost:7233}
     namespace: ${TEMPORAL_NAMESPACE:default}
+
+  # Every Claude call goes through one client built from these (see AnthropicConfig).
+  anthropic:
+    base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com}
+    api-key: ${ANTHROPIC_API_KEY:}
+    api-key-header: ""        # empty = standard x-api-key header
+    headers: {}               # extra headers sent on every request
+
+---
+# Corporate AI gateway. Activate with SPRING_PROFILES_ACTIVE=gateway.
+# The key is sent only in the custom header — never as x-api-key.
+spring:
+  config:
+    activate:
+      on-profile: gateway
+
+app:
+  anthropic:
+    base-url: ${ANTHROPIC_GATEWAY_URL}                  # e.g. https://ai-gateway.example.com/anthropic (SDK appends /v1/messages)
+    api-key: ${ANTHROPIC_GATEWAY_API_KEY}
+    api-key-header: ${ANTHROPIC_GATEWAY_KEY_HEADER}     # e.g. X-Gateway-Api-Key
+    headers: {}
+    # headers:                                         # add any static headers your gateway requires
+    #   X-App-Id: rm-brief
