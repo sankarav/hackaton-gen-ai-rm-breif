@@ -36,7 +36,7 @@ GET /briefs/{clientId}/stream  (Server-Sent Events)
   └── AgentOrchestrator.run()
         ├── 1. GATHER     6 read-only tools → Plaid Sandbox + synthetic CRM (Postgres)
         ├── 2. DELTA      DeltaService — pure Java, ZERO LLM tokens → ChangeReport
-        ├── 3. SYNTHESIZE one claude-sonnet-4-6 call, prose strictly from the ChangeReport
+        ├── 3. SYNTHESIZE one Claude call (claude-sonnet-5 by default), prose strictly from the ChangeReport
         ├── 4. VALIDATE   strip any citation ID not present in the ChangeReport
         └── 5. STREAM     emit SSE events for each phase so the agent is observable
 ```
@@ -134,7 +134,7 @@ http://localhost:8233.
 | API | Java 21 / Spring Boot 4.0 / Maven |
 | Database | PostgreSQL 16 (schema + seed via Flyway) |
 | Cache | Redis 7 (wired, off by default) |
-| Runtime LLM | Claude **Sonnet 4.6** (brief) · **Opus 5.5** (capture extraction & vision) via `anthropic-java` |
+| Runtime LLM | Claude via `anthropic-java`; models set in `application.yml` (`BRIEF_MODEL`, `AGENT_MODEL`, `CAPTURE_MODEL`) |
 | Orchestration | Temporal (`temporal-sdk` 1.40.0; dev server in compose) |
 | Speech-to-text | Self-hosted Whisper container (switchable to OpenAI via config) |
 | Financial data | Plaid Sandbox via `plaid-java` 35.0.0 |
@@ -170,7 +170,7 @@ app:
 - [Flyway](https://flywaydb.org/) · PostgreSQL 16 · Redis 7
 - [Temporal](https://temporal.io/) Java SDK (MIT) and `temporalio/temporal` dev server
 - [openai-whisper-asr-webservice](https://github.com/ahmetoner/whisper-asr-webservice) (MIT) running OpenAI Whisper models
-- Claude models (`claude-sonnet-4-6`) via the Anthropic API
+- Claude models (configurable; default `claude-sonnet-5`) via the Anthropic API
 
 **Data:** all data is synthetic / Plaid Sandbox. No customer PII, account data, or confidential
 business data is used, committed, or sent to any external service.

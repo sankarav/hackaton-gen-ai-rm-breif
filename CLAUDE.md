@@ -76,7 +76,7 @@ GET /briefs/{clientId}/stream
         ├── 2. DELTA   — DeltaService.compute() — pure Java, no LLM
         │     └── Produces ChangeReport: balances, large outflows, maturity alerts, dormancy flag
         ├── 3. SYNTHESIZE — SynthesisService.synthesize()
-        │     ├── Single Claude call (claude-sonnet-4-6) with ChangeReport + CRM context
+        │     ├── Single Claude call (`app.brief.model`, default claude-sonnet-5) with ChangeReport + CRM context
         │     ├── Citation validator strips any IDs not in the ChangeReport before returning
         │     └── Returns BriefSchema (typed Java record matching spec §8 JSON schema)
         └── 4. STREAM  — BriefController emits SSE events for each phase transition
@@ -154,7 +154,7 @@ Static UI is a single file at `brief-api/src/main/resources/static/index.html` (
 - **Temporal dev server image runs as uid 1000** — its volume is mounted at `/home/temporal` so the SQLite file is writable.
 - **Plaid sandbox items expire** (`ITEM_LOGIN_REQUIRED`) — re-seed with `force:true`. Capture still works; product matching falls back to CRM products.
 - Shorten timers for demos: `CAPTURE_REVIEW_REMINDER`, `CAPTURE_RETENTION_NOTES`, `CAPTURE_RETENTION_RECORDING` (e.g. `45s`).
-- Capture Claude calls use `CAPTURE_MODEL` (default `claude-opus-5-5`) with structured outputs and server-side fallbacks; the brief synthesis still uses `claude-sonnet-4-6`.
+- Models are set in `application.yml`, never in code: `BRIEF_MODEL` (brief synthesis), `AGENT_MODEL` (tool planning when `eager-tool-calls=false`), `CAPTURE_MODEL` (capture vision, speaker labels, extraction). Newer models think by default and thinking is billed as output, so keep `maxTokens` generous (16000). Every Claude call logs `[llm] <purpose> model= in= out=` for cost tracking.
 
 ## Configurable thresholds (application.yml)
 
@@ -165,4 +165,7 @@ app:
     dormancy-days: 90
   agent:
     eager-tool-calls: true          # false = Claude plans which tools to call
+    model: claude-sonnet-5          # AGENT_MODEL
+  brief:
+    model: claude-sonnet-5          # BRIEF_MODEL
 ```

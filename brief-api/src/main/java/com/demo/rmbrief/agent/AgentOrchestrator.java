@@ -33,6 +33,9 @@ public class AgentOrchestrator {
     @Value("${app.agent.eager-tool-calls:true}")
     private boolean eagerToolCalls;
 
+    @Value("${app.agent.model}")
+    private String agentModel;
+
     private final PlaidToolService plaidTools;
     private final CrmContextService crmContext;
     private final DeltaService deltaService;
@@ -128,8 +131,8 @@ public class AgentOrchestrator {
             """;
 
         MessageCreateParams params = MessageCreateParams.builder()
-            .model(Model.of("claude-sonnet-4-6"))
-            .maxTokens(4096L)
+            .model(agentModel)
+            .maxTokens(16000L)
             .system(systemPrompt)
             .addUserMessage("Gather all financial data for client ID: " + clientId)
             .tools(toolDefs)

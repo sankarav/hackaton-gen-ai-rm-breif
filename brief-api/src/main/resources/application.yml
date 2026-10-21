@@ -53,6 +53,9 @@ app:
     dormancy-days: 90
   agent:
     eager-tool-calls: true   # false = let Claude plan which tools to call
+    model: ${AGENT_MODEL:claude-sonnet-5}            # tool planning (only used when eager-tool-calls=false)
+  brief:
+    model: ${BRIEF_MODEL:claude-sonnet-5}            # pre-meeting brief synthesis
   plaid:
     env: ${PLAID_ENV:sandbox}
 

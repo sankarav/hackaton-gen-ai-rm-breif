@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -80,10 +81,12 @@ public class SynthesisService {
 
     private final CrmContextService crmContextService;
     private final AnthropicClient anthropic;
+    private final String model;
 
-    public SynthesisService(CrmContextService crmContextService) {
+    public SynthesisService(CrmContextService crmContextService, @Value("${app.brief.model}") String model) {
         this.crmContextService = crmContextService;
         this.anthropic = AnthropicOkHttpClient.fromEnv();
+        this.model = model;
     }
 
     public BriefSchema synthesize(String clientId, ChangeReport report) {
@@ -94,8 +97,9 @@ public class SynthesisService {
         String crmJson;
         String changeReportJson;
         try {
-            crmJson = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(crmResult.data());
-            changeReportJson = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(report);
+            // Compact JSON: indentation whitespace is billed as input tokens.
+            crmJson = MAPPER.writeValueAsString(crmResult.data());
+            changeReportJson = MAPPER.writeValueAsString(report);
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize input data for synthesis", e);
         }
@@ -115,13 +119,20 @@ public class SynthesisService {
         log.debug("[synthesis] sending to Claude, changeReport size={} chars", changeReportJson.length());
 
         MessageCreateParams params = MessageCreateParams.builder()
-                .model(Model.of("claude-sonnet-4-6"))
-                .maxTokens(4096L)
+                .model(model)
+                // Headroom for thinking tokens, which newer models produce by default and count toward max_tokens.
+                .maxTokens(16000L)
                 .system(SYSTEM_PROMPT)
                 .addUserMessage(userMessage)
                 .build();
 
         Message response = anthropic.messages().create(params);
+        log.info("[llm] brief-synthesis model={} in={} out={} stop={}", response.model().asString(),
+                response.usage().inputTokens(), response.usage().outputTokens(),
+                response.stopReason().map(Object::toString).orElse("?"));
+        if ("max_tokens".equals(response.stopReason().map(Object::toString).orElse(""))) {
+            throw new RuntimeException("Brief exceeded max_tokens before finishing");
+        }
 
         String rawJson = response.content().stream()
                 .filter(ContentBlock::isText)
