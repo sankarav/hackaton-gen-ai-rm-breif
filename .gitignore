@@ -2,3 +2,4 @@
 brief-api/target/
 *.class
 *.jar
+data/

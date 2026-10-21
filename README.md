@@ -56,8 +56,10 @@ cp .env.example .env
 #      PLAID_CLIENT_ID=...
 #      PLAID_SECRET=...
 #      PLAID_ENV=sandbox
+#      MEDIA_ENCRYPTION_KEY=$(openssl rand -base64 32)   # encrypts captured photos/audio
 
-# 2. Start everything (builds the brief-api image from source)
+# 2. Start everything (builds the brief-api image from source; first run pulls the
+#    Temporal and Whisper images, ~5 GB for Whisper)
 docker compose up --build        # ~2–3 min first build; ~30s to healthy after
 
 # 3. Health check
@@ -96,6 +98,26 @@ curl -X POST http://localhost:8080/admin/seed-client \
 | GET | `/debug/tools/{clientId}/{tool}` | Run a single read tool, inspect raw output |
 | GET | `/debug/delta/{clientId}` | Run the deterministic delta, inspect the ChangeReport |
 | GET | `/health` | Liveness check |
+| POST | `/captures` | Upload post-meeting notes / photos / audio — starts a capture workflow |
+| GET | `/captures/{id}` · `/captures/{id}/stream` | Draft for review · SSE progress |
+| PUT | `/captures/{id}/items/{itemId}` | Edit a drafted item or Keep/Drop it |
+| POST | `/captures/{id}/approve` · `/reject` · `/withdraw-consent` | RM decision (Temporal signal) |
+| GET/PUT | `/policy/recording` · `/admin/recording-policy` | Compliance toggle for meeting recording |
+| GET | `/clients/{id}/promises` | Open promises tracked from approved captures |
+
+## Post-meeting capture (Phase 2)
+
+Open **http://localhost:8080/capture.html** after a meeting. The RM adds any mix of typed notes,
+photos of handwritten notes, a **voice memo**, or (only when compliance has enabled it, and only
+after the client consents) a **recording of the meeting**. A durable **Temporal** workflow per
+capture runs: transcribe (local Whisper, or Claude vision for photos) → label RM/client speech
+(recordings) → one Claude extraction (summary, promises, life events, product interest, concerns,
+next meeting) → **deterministic Java** resolution of dates ("next Friday") and products ("the CD").
+Every drafted item cites the source lines it came from. The RM reviews, edits and approves —
+nothing reaches the CRM otherwise — and approved promises are tracked as due / overdue in the next
+pre-meeting brief. Raw media is AES-GCM encrypted at rest and deleted after a retention period;
+withdrawing consent purges a recording and everything derived from it. Temporal UI:
+http://localhost:8233.
 
 ## Demo clients (synthetic)
 
@@ -112,7 +134,9 @@ curl -X POST http://localhost:8080/admin/seed-client \
 | API | Java 21 / Spring Boot 4.0 / Maven |
 | Database | PostgreSQL 16 (schema + seed via Flyway) |
 | Cache | Redis 7 (wired, off by default) |
-| Runtime LLM | Claude **Sonnet 4.6** via `anthropic-java` 2.41.0 |
+| Runtime LLM | Claude **Sonnet 4.6** (brief) · **Opus 5.5** (capture extraction & vision) via `anthropic-java` |
+| Orchestration | Temporal (`temporal-sdk` 1.40.0; dev server in compose) |
+| Speech-to-text | Self-hosted Whisper container (switchable to OpenAI via config) |
 | Financial data | Plaid Sandbox via `plaid-java` 35.0.0 |
 | UI | Single static HTML/JS file (no build step) |
 | Packaging | Multi-stage Docker + Docker Compose |
@@ -144,6 +168,8 @@ app:
 - [`plaid-java`](https://github.com/plaid/plaid-java) 35.0.0 (MIT) — Plaid Sandbox client
 - [`anthropic-java`](https://github.com/anthropics/anthropic-sdk-java) 2.41.0 (MIT) — Anthropic Messages API client
 - [Flyway](https://flywaydb.org/) · PostgreSQL 16 · Redis 7
+- [Temporal](https://temporal.io/) Java SDK (MIT) and `temporalio/temporal` dev server
+- [openai-whisper-asr-webservice](https://github.com/ahmetoner/whisper-asr-webservice) (MIT) running OpenAI Whisper models
 - Claude models (`claude-sonnet-4-6`) via the Anthropic API
 
 **Data:** all data is synthetic / Plaid Sandbox. No customer PII, account data, or confidential

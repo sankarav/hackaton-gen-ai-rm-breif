@@ -26,6 +26,10 @@
   }
   header .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
   header .tagline { font-size: 13px; color: #8ba7c7; }
+  header nav { display: flex; gap: 4px; margin-left: auto; }
+  header nav a { color: #c9d8ea; text-decoration: none; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; }
+  header nav a:hover { background: rgba(255,255,255,0.08); }
+  header nav a.active { background: rgba(255,255,255,0.14); color: white; }
 
   /* ── Main layout ── */
   main {
@@ -301,6 +305,10 @@
     <div class="logo">RM Intelligence</div>
     <div class="tagline">Pre-Meeting Client Brief · Powered by Claude + Plaid Sandbox</div>
   </div>
+  <nav>
+    <a href="/" class="active">Pre-meeting brief</a>
+    <a href="/capture.html" id="capture-link">Meeting capture</a>
+  </nav>
 </header>
 
 <main>
@@ -349,8 +357,15 @@
     const clients = await res.json();
     const sel = document.getElementById('client-select');
     sel.innerHTML = clients.map(c =>
-      `<option value="${c.clientId}">${c.fullName} · ${c.segment}</option>`
+      `<option value="${escHtml(c.clientId)}">${escHtml(c.fullName)} · ${escHtml(c.segment)}</option>`
     ).join('');
+    const pre = new URLSearchParams(location.search).get('client');
+    if (pre && clients.some(c => c.clientId === pre)) sel.value = pre;
+    const syncCaptureLink = () => {
+      document.getElementById('capture-link').href = '/capture.html?client=' + encodeURIComponent(sel.value);
+    };
+    sel.addEventListener('change', syncCaptureLink);
+    syncCaptureLink();
     document.getElementById('generate-btn').disabled = false;
   } catch (e) {
     document.getElementById('client-select').innerHTML = '<option>Failed to load clients</option>';
@@ -492,7 +507,25 @@ function buildCitationIndex(report) {
     };
   });
 
+  (report.openPromises || []).forEach(p => {
+    idx[p.promiseId] = {
+      label: 'Promise' + (p.status === 'OVERDUE' ? ' (overdue)' : p.status === 'DUE_SOON' ? ' (due soon)' : ''),
+      detail: [
+        p.text,
+        (p.owner === 'CLIENT' ? 'Client' : 'RM') + ' owns it',
+        p.dueDate ? 'Due ' + p.dueDate + ' (' + dayCount(p.daysUntilDue) + ')' : 'No due date',
+        'Promise ID: ' + p.promiseId,
+      ].join('\n'),
+    };
+  });
+
   citationIndex = idx;
+}
+
+function dayCount(d) {
+  if (d === 0) return 'due today';
+  const n = Math.abs(d);
+  return n + (n === 1 ? ' day' : ' days') + (d < 0 ? ' overdue' : ' left');
 }
 
 function fmtCurrency(n) {

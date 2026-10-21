@@ -7,12 +7,22 @@ services:
       SPRING_DATASOURCE_USERNAME: rm
       SPRING_DATASOURCE_PASSWORD: rm
       SPRING_DATA_REDIS_HOST: redis
+      TEMPORAL_TARGET: temporal:7233
+      WHISPER_URL: http://whisper:9000
+      MEDIA_ROOT: /data/media
+      MEDIA_ENCRYPTION_KEY: ${MEDIA_ENCRYPTION_KEY:?Set MEDIA_ENCRYPTION_KEY in .env (openssl rand -base64 32)}
+    volumes:
+      - mediadata:/data/media
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_started
+      temporal:
+        condition: service_healthy
+      whisper:
         condition: service_started
     restart: on-failure
 
@@ -37,5 +47,37 @@ services:
     ports:
       - "6379:6379"
 
+  # Temporal dev server (SQLite persisted on a volume) + Web UI on :8233.
+  # Swap for a Temporal cluster or Temporal Cloud in production.
+  temporal:
+    image: temporalio/temporal:1.9.1
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--ui-ip", "0.0.0.0", "--ui-port", "8233",
+              "--db-filename", "/home/temporal/temporal.db"]
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+    volumes:
+      - temporaldata:/home/temporal
+    healthcheck:
+      test: ["CMD", "temporal", "operator", "cluster", "health", "--address", "localhost:7233"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Self-hosted speech-to-text; audio never leaves this network.
+  # Switch to OpenAI with TRANSCRIPTION_PROVIDER=openai + OPENAI_API_KEY in .env.
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    environment:
+      ASR_ENGINE: faster_whisper
+      ASR_MODEL: base.en
+    ports:
+      - "9000:9000"
+    volumes:
+      - whispercache:/root/.cache
+
 volumes:
   pgdata: {}
+  mediadata: {}
+  temporaldata: {}
+  whispercache: {}

@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RM Pre-Meeting Intelligence Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Print Setup ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:   #0D1B3E;
+  --navy2:  #162447;
+  --teal:   #028090;
+  --mint:   #02C39A;
+  --ice:    #C8D8F0;
+  --light:  #F0F5FF;
+  --white:  #FFFFFF;
+  --muted:  #6B7FA3;
+  --warn:   #F59E0B;
+  --red:    #EF4444;
+  --green:  #10B981;
+}
+
+body { font-family: 'Inter', system-ui, sans-serif; background: #111; }
+
+@page {
+  size: 297mm 167.25mm;
+  margin: 0;
+}
+
+/* ── Slide base ──────────────────────────────────────────────────── */
+.slide {
+  width: 297mm;
+  height: 167.25mm;
+  position: relative;
+  overflow: hidden;
+  page-break-after: always;
+  page-break-inside: avoid;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Screen preview spacing */
+@media screen {
+  body { padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+  .slide {
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    border-radius: 4px;
+  }
+}
+
+/* ── Utility ─────────────────────────────────────────────────────── */
+.dark  { background: var(--navy); }
+.light { background: var(--light); }
+.teal-bg { background: var(--teal); }
+
+.chip {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.chip-mint  { background: rgba(2,195,154,0.18); color: var(--mint); border: 1px solid rgba(2,195,154,0.4); }
+.chip-teal  { background: rgba(2,128,144,0.18); color: #00B4D8; border: 1px solid rgba(2,128,144,0.4); }
+.chip-warn  { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.35); }
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mint);
+  margin-bottom: 8px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 1 — TITLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s1 {
+  background: var(--navy);
+  padding: 44px 56px;
+  justify-content: space-between;
+}
+.s1::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 42%;
+  height: 100%;
+  background: radial-gradient(ellipse at 70% 40%, rgba(2,128,144,0.22) 0%, transparent 65%);
+  pointer-events: none;
+}
+.s1::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -60px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(2,195,154,0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+.s1-top { position: relative; z-index: 1; }
+.s1-logo { font-size: 11px; font-weight: 600; letter-spacing: 3px; color: var(--teal); text-transform: uppercase; margin-bottom: 32px; }
+.s1-title { font-size: 52px; font-weight: 800; color: var(--white); line-height: 1.08; margin-bottom: 4px; }
+.s1-title span { color: var(--mint); }
+.s1-sub { font-size: 15px; font-weight: 400; color: var(--ice); margin-top: 16px; opacity: 0.8; }
+.s1-bottom {
+  display: flex; align-items: center; gap: 20px; position: relative; z-index: 1;
+}
+.s1-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 11px; color: var(--ice); font-weight: 500;
+}
+.s1-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); }
+.s1-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.12); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 2 — PROBLEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s2 {
+  background: var(--light);
+  padding: 32px 44px;
+}
+.slide-header {
+  margin-bottom: 20px;
+}
+.slide-header h2 {
+  font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1.2;
+}
+.stat-row { display: flex; gap: 14px; margin-bottom: 18px; }
+.stat-card {
+  flex: 1;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 16px 14px;
+  box-shadow: 0 2px 12px rgba(13,27,62,0.08);
+  text-align: center;
+  border-top: 3px solid var(--teal);
+}
+.stat-card.red  { border-top-color: var(--red); }
+.stat-card.warn { border-top-color: var(--warn); }
+.stat-card.mint { border-top-color: var(--mint); }
+.stat-card.navy { border-top-color: var(--navy); }
+.stat-num { font-size: 28px; font-weight: 800; color: var(--navy); line-height: 1; margin-bottom: 4px; }
+.stat-card.red  .stat-num { color: var(--red); }
+.stat-card.warn .stat-num { color: var(--warn); }
+.stat-card.mint .stat-num { color: var(--teal); }
+.stat-label { font-size: 10px; font-weight: 500; color: var(--muted); line-height: 1.4; }
+
+.two-col { display: flex; gap: 20px; flex: 1; }
+.pain-block { flex: 1; }
+.pain-block h3 { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+.pain-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-bottom: 9px;
+  background: var(--white);
+  border-radius: 8px;
+  padding: 9px 12px;
+  box-shadow: 0 1px 6px rgba(13,27,62,0.06);
+}
+.pain-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.pain-text { font-size: 11.5px; color: #334155; font-weight: 500; line-height: 1.4; }
+
+.quote-block {
+  flex: 1.1;
+  background: var(--navy);
+  border-radius: 12px;
+  padding: 20px 22px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.quote-text {
+  font-size: 13px; font-style: italic; color: var(--ice); line-height: 1.65;
+  font-weight: 400;
+}
+.quote-attr { font-size: 10px; color: var(--teal); font-weight: 600; margin-top: 12px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 3 — SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s3 {
+  background: var(--navy);
+  padding: 32px 44px;
+}
+.s3-grid { display: flex; gap: 18px; flex: 1; }
+.brief-features { flex: 1.1; display: flex; flex-direction: column; gap: 8px; }
+.feat-item {
+  display: flex; gap: 12px; align-items: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.feat-icon { font-size: 18px; flex-shrink: 0; }
+.feat-body {}
+.feat-title { font-size: 12px; font-weight: 700; color: var(--mint); margin-bottom: 2px; }
+.feat-desc { font-size: 10.5px; color: var(--ice); opacity: 0.8; line-height: 1.4; }
+
+.design-pillar {
+  flex: 0.9;
+  background: rgba(2,128,144,0.12);
+  border: 1px solid rgba(2,195,154,0.25);
+  border-radius: 14px;
+  padding: 22px 20px;
+  display: flex; flex-direction: column;
+}
+.pillar-title { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 12px; }
+.pillar-quote {
+  font-size: 12px; font-style: italic; color: var(--ice);
+  border-left: 3px solid var(--mint);
+  padding-left: 12px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+.guarantee { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.g-check { font-size: 14px; }
+.g-text { font-size: 12px; font-weight: 600; color: var(--ice); }
+.pillar-cta {
+  margin-top: auto;
+  background: var(--mint);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.pillar-cta .big { font-size: 20px; font-weight: 800; color: var(--navy); }
+.pillar-cta .small { font-size: 10px; font-weight: 600; color: var(--navy); opacity: 0.7; margin-top: 2px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 4 — PIPELINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s4 {
+  background: #07101F;
+  padding: 30px 40px;
+}
+.s4 .slide-header h2 { color: var(--white); }
+.pipeline { display: flex; align-items: stretch; gap: 0; flex: 1; }
+.phase {
+  flex: 1;
+  display: flex; flex-direction: column;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 18px 16px;
+  position: relative;
+}
+.phase + .phase { margin-left: 14px; }
+.phase-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+.phase-icon { font-size: 26px; margin-bottom: 8px; }
+.phase-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.phase-lines { display: flex; flex-direction: column; gap: 6px; }
+.phase-line {
+  font-size: 11px; color: rgba(200,216,240,0.75); font-weight: 400; line-height: 1.4;
+}
+.phase-line strong { color: var(--white); font-weight: 600; }
+
+.phase-gather  { border-color: rgba(2,128,144,0.4); }
+.phase-gather  .phase-num { background: var(--teal); color: var(--white); }
+.phase-gather  .phase-label { color: var(--teal); }
+.phase-gather  .phase-icon::before { content: '⚙️'; }
+
+.phase-delta   { border-color: rgba(2,195,154,0.4); }
+.phase-delta   .phase-num { background: var(--mint); color: var(--navy); }
+.phase-delta   .phase-label { color: var(--mint); }
+.phase-delta   .phase-icon::before { content: '📊'; }
+
+.phase-synth   { border-color: rgba(139,92,246,0.4); }
+.phase-synth   .phase-num { background: #7C3AED; color: var(--white); }
+.phase-synth   .phase-label { color: #A78BFA; }
+.phase-synth   .phase-icon::before { content: '🤖'; }
+
+.phase-stream  { border-color: rgba(245,158,11,0.4); }
+.phase-stream  .phase-num { background: var(--warn); color: var(--navy); }
+.phase-stream  .phase-label { color: var(--warn); }
+.phase-stream  .phase-icon::before { content: '📡'; }
+
+.phase-arrow {
+  align-self: center;
+  font-size: 18px; color: rgba(255,255,255,0.2);
+  margin: 0 -2px;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.s4-foot { font-size: 10px; color: var(--muted); margin-top: 12px; text-align: center; font-style: italic; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 5 — DIFFERENTIATOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s5 {
+  background: var(--light);
+  padding: 30px 40px;
+}
+.vs-grid {
+  display: flex; gap: 16px; align-items: stretch; flex: 1;
+}
+.vs-col {
+  flex: 1; border-radius: 14px; padding: 20px 20px;
+}
+.vs-col.bad  { background: #FEF2F2; border: 1.5px solid #FECACA; }
+.vs-col.good { background: #F0FDF9; border: 1.5px solid #A7F3D0; }
+
+.vs-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.vs-icon { font-size: 20px; }
+.vs-heading { font-size: 14px; font-weight: 800; }
+.vs-col.bad  .vs-heading { color: #991B1B; }
+.vs-col.good .vs-heading { color: #065F46; }
+
+.vs-item { display: flex; gap: 8px; margin-bottom: 10px; }
+.vs-bullet { flex-shrink: 0; margin-top: 2px; font-size: 12px; }
+.vs-text { font-size: 12px; line-height: 1.5; font-weight: 500; }
+.vs-col.bad  .vs-text { color: #7F1D1D; }
+.vs-col.good .vs-text { color: #064E3B; }
+
+.vs-separator {
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 4px; padding: 0 4px;
+}
+.vs-vs {
+  background: var(--navy); color: var(--white);
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+}
+
+.vs-foot {
+  margin-top: 16px;
+  background: var(--navy);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 12px; font-weight: 600; color: var(--mint);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 6 — SCREENSHOT / DEMO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s6 {
+  background: #07101F;
+  padding: 24px 36px;
+}
+.s6 .slide-header h2 { color: var(--white); }
+.screenshot-frame {
+  flex: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #fff;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+}
+.screenshot-frame img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.s6-foot { font-size: 10px; color: var(--muted); margin-top: 8px; text-align: center; font-style: italic; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 7 — CITATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s7 {
+  background: var(--navy);
+  padding: 30px 44px;
+}
+.s7 .slide-header h2 { color: var(--white); }
+.citation-flow {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 22px;
+}
+.cf-step {
+  flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 12px 10px; text-align: center;
+}
+.cf-icon { font-size: 20px; margin-bottom: 4px; }
+.cf-label { font-size: 10px; font-weight: 600; color: var(--ice); line-height: 1.3; }
+.cf-arrow { font-size: 16px; color: rgba(2,195,154,0.5); flex-shrink: 0; }
+
+.cite-outcomes { display: flex; gap: 16px; }
+.cite-card {
+  flex: 1; border-radius: 12px; padding: 18px 20px;
+}
+.cite-card.good { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+.cite-card.bad  { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+.cite-card-title {
+  font-size: 13px; font-weight: 700; margin-bottom: 8px;
+}
+.cite-card.good .cite-card-title { color: var(--mint); }
+.cite-card.bad  .cite-card-title { color: var(--warn); }
+.cite-card-body { font-size: 11.5px; color: var(--ice); opacity: 0.85; line-height: 1.6; }
+.cite-example {
+  margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+  font-size: 10.5px; font-family: 'Courier New', monospace; font-weight: 500;
+}
+.cite-card.good .cite-example { background: rgba(16,185,129,0.15); color: #6EE7B7; }
+.cite-card.bad  .cite-example { background: rgba(245,158,11,0.12); color: var(--warn); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 8 — BUSINESS CASE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s8 {
+  background: #07101F;
+  padding: 30px 44px;
+}
+.s8 .slide-header h2 { color: var(--white); }
+.biz-hero { display: flex; gap: 14px; margin-bottom: 18px; }
+.biz-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+}
+.biz-stat .big { font-size: 30px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.biz-stat .lbl { font-size: 10px; color: var(--muted); font-weight: 500; line-height: 1.4; }
+.biz-stat.mint .big { color: var(--mint); }
+.biz-stat.teal .big { color: #00B4D8; }
+.biz-stat.warn .big { color: var(--warn); }
+.biz-stat.ice  .big { color: var(--ice);  }
+
+.biz-detail { display: flex; gap: 14px; flex: 1; }
+.detail-card {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 16px 16px;
+}
+.detail-card h3 { font-size: 11px; font-weight: 700; color: var(--mint); margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+.detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.detail-row .k { font-size: 11px; color: var(--ice); opacity: 0.8; }
+.detail-row .v { font-size: 11px; font-weight: 600; color: var(--white); }
+.detail-row.total .k { color: var(--mint); font-weight: 700; }
+.detail-row.total .v { color: var(--mint); font-weight: 800; }
+.detail-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 8px 0; }
+.biz-foot {
+  margin-top: 14px; text-align: center;
+  font-size: 10px; color: var(--muted); font-style: italic;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 9 — TECH STACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s9 {
+  background: var(--light);
+  padding: 30px 44px;
+}
+.s9-grid { display: flex; gap: 18px; flex: 1; }
+.stack-list { flex: 1; display: flex; flex-direction: column; gap: 9px; }
+.stack-item {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--white);
+  border-radius: 10px; padding: 11px 14px;
+  box-shadow: 0 1px 8px rgba(13,27,62,0.07);
+  border-left: 3px solid var(--teal);
+}
+.stack-item.mint-border { border-left-color: var(--mint); }
+.stack-item.warn-border { border-left-color: var(--warn); }
+.stack-icon { font-size: 18px; flex-shrink: 0; }
+.stack-body { flex: 1; }
+.stack-layer { font-size: 10px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.8px; }
+.stack-item.mint-border .stack-layer { color: var(--mint); }
+.stack-item.warn-border .stack-layer { color: var(--warn); }
+.stack-tech  { font-size: 12px; font-weight: 600; color: var(--navy); }
+
+.agentic-block {
+  flex: 1.1;
+  background: var(--navy);
+  border-radius: 14px; padding: 22px 20px;
+}
+.agentic-block h3 { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 16px; }
+.agentic-item { margin-bottom: 14px; }
+.agentic-title { font-size: 12px; font-weight: 700; color: var(--mint); margin-bottom: 3px; }
+.agentic-desc  { font-size: 11px; color: var(--ice); opacity: 0.8; line-height: 1.5; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 10 — ROADMAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s10 {
+  background: var(--navy);
+  padding: 30px 44px;
+}
+.s10 .slide-header h2 { color: var(--white); }
+.roadmap { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.rm-item {
+  display: flex; gap: 16px; align-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 14px 18px;
+}
+.rm-week {
+  font-size: 10px; font-weight: 700; color: var(--mint); text-align: center;
+  background: rgba(2,195,154,0.12); border-radius: 8px;
+  padding: 6px 10px; min-width: 62px; flex-shrink: 0;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.rm-body { flex: 1; }
+.rm-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+.rm-note  { font-size: 11px; color: var(--muted); }
+.rm-tag {
+  font-size: 10px; font-weight: 600; color: var(--teal);
+  background: rgba(2,128,144,0.15); border: 1px solid rgba(2,128,144,0.3);
+  border-radius: 6px; padding: 3px 10px; flex-shrink: 0;
+}
+.rm-foot { font-size: 10.5px; color: var(--muted); text-align: center; font-style: italic; margin-top: 4px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDE 11 — CLOSE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.s11 {
+  background: var(--navy);
+  padding: 44px 56px;
+  justify-content: space-between;
+}
+.s11::before {
+  content: '';
+  position: absolute; top: 0; right: 0;
+  width: 50%; height: 100%;
+  background: radial-gradient(ellipse at 80% 30%, rgba(2,195,154,0.13) 0%, transparent 60%);
+  pointer-events: none;
+}
+.s11-top { position: relative; z-index: 1; }
+.s11-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--teal); text-transform: uppercase; margin-bottom: 14px; }
+.s11-headline { font-size: 42px; font-weight: 800; color: var(--white); line-height: 1.1; margin-bottom: 6px; }
+.s11-headline span { color: var(--mint); }
+.s11-sub { font-size: 14px; color: var(--ice); opacity: 0.75; margin-top: 10px; }
+.win-row { display: flex; gap: 16px; position: relative; z-index: 1; }
+.win-card {
+  flex: 1; border-radius: 14px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  padding: 18px 20px;
+}
+.win-icon { font-size: 22px; margin-bottom: 8px; }
+.win-title { font-size: 13px; font-weight: 700; color: var(--mint); margin-bottom: 6px; }
+.win-desc  { font-size: 11.5px; color: var(--ice); opacity: 0.8; line-height: 1.6; }
+.s11-foot { font-size: 9px; color: rgba(255,255,255,0.25); text-align: center; position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<!-- ━━━━ SLIDE 1: TITLE ━━━━ -->
+<div class="slide s1">
+  <div class="s1-top">
+    <div class="s1-logo">M&T Bank · AI Hackathon 2026</div>
+    <div class="s1-title">RM Pre-Meeting<br><span>Intelligence Brief</span></div>
+    <div class="s1-sub">Agentic AI that generates a one-page, fully-cited client brief for a<br>Relationship Manager — from a single client ID, in seconds.</div>
+  </div>
+  <div class="s1-bottom">
+    <div class="s1-badge"><div class="dot"></div> Powered by Claude Sonnet 4.6</div>
+    <div class="s1-divider"></div>
+    <div class="s1-badge"><div class="dot"></div> Plaid Sandbox</div>
+    <div class="s1-divider"></div>
+    <div class="s1-badge"><div class="dot"></div> Java 21 · Spring Boot 4</div>
+    <div class="s1-divider"></div>
+    <div class="s1-badge"><div class="dot" style="background:var(--warn)"></div> Focus: High-Value Use Cases · Agent-Based AI · GenAI Ops</div>
+  </div>
+</div>
+
+<!-- ━━━━ SLIDE 2: PROBLEM ━━━━ -->
+<div class="slide s2">
+  <div class="slide-header">
+    <div class="section-title">The Problem</div>
+    <h2>Meeting Prep is Manual, Slow, and Error-Prone</h2>
+  </div>
+  <div class="stat-row">
+    <div class="stat-card red">
+      <div class="stat-num">10 min</div>
+      <div class="stat-label">manual prep<br>per meeting</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-num">6 ×/day</div>
+      <div class="stat-label">average client<br>meetings</div>
+    </div>
+    <div class="stat-card mint">
+      <div class="stat-num">220</div>
+      <div class="stat-label">working days<br>per year</div>
+    </div>
+    <div class="stat-card navy">
+      <div class="stat-num">220 hrs</div>
+      <div class="stat-label">lost per RM<br>per year</div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="pain-block">
+      <h3>Where it breaks down</h3>
+      <div class="pain-item">
+        <div class="pain-icon">🗂️</div>
+        <div class="pain-text">Data scattered across core-banking, CRM, and investment platforms — no single view</div>
+      </div>
+      <div class="pain-item">
+        <div class="pain-icon">📝</div>
+        <div class="pain-text">Open promises from last meeting buried in unstructured notes</div>
+      </div>
+      <div class="pain-item">
+        <div class="pain-icon">🔔</div>
+        <div class="pain-text">No alert when a CD matures or a large outflow just hit the account</div>
+      </div>
+      <div class="pain-item">
+        <div class="pain-icon">🎯</div>
+        <div class="pain-text">Generic prep — nothing tailored to what actually changed since the last meeting</div>
+      </div>
+    </div>
+    <div class="quote-block">
+      <div class="quote-text">"Before every client meeting, I spend 10–15 minutes opening core-banking screens, checking CRM notes, scanning recent transactions, and hoping I remember what I promised last time."</div>
+      <div class="quote-attr">— Relationship Manager, front-line banking</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━ SLIDE 3: SOLUTION ━━━━ -->
+<div class="slide s3">
+  <div class="slide-header" style="margin-bottom:16px;">
+    <div class="section-title" style="color:var(--teal)">Our Solution</div>
+    <h2 style="color:var(--white);font-size:20px;">One Click → One Page Brief, Ready in Seconds</h2>
+  </div>
+  <div class="s3-grid">
+    <div class="brief-features">
+      <div class="feat-item">
+        <div class="feat-icon">📸</div>
+        <div class="feat-body"><div class="feat-title">Snapshot</div><div class="feat-desc">Name, segment, tenure, total relationship value — all from live data</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">📊</div>
+        <div class="feat-body"><div class="feat-title">Changed Since Last Meeting</div><div class="feat-desc">What actually moved — balances, inflows, outflows delta'd from CRM meeting date</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">⚠️</div>
+        <div class="feat-body"><div class="feat-title">Watch-Outs</div><div class="feat-desc">Severity-rated: overdraft risk, near-limit credit, dormant accounts</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">💡</div>
+        <div class="feat-body"><div class="feat-title">Opportunities</div><div class="feat-desc">Maturing CDs, underutilised savings, cross-sell signals</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">🗣️</div>
+        <div class="feat-body"><div class="feat-title">Talking Points</div><div class="feat-desc">Three scripted, data-grounded conversation starters — specific amounts and dates</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">📝</div>
+        <div class="feat-body"><div class="feat-title">Last Interaction Recap</div><div class="feat-desc">Meeting notes + open promises from CRM — the RM stays accountable</div></div>
+      </div>
+    </div>
+    <div class="design-pillar">
+      <div class="pillar-title">The Design That Makes It Bank-Grade</div>
+      <div class="pillar-quote">"What is true" is deterministic Java.<br>"How to say it" is the LLM.<br><br>The model is never trusted with arithmetic, dates, or comparisons.</div>
+      <div class="guarantee"><div class="g-check">✅</div><div class="g-text">No invented numbers</div></div>
+      <div class="guarantee"><div class="g-check">✅</div><div class="g-text">Every claim has an auditable citation</div></div>
+      <div class="guarantee"><div class="g-check">✅</div><div class="g-text">One right-sized model call per brief</div></div>
+      <div class="pillar-cta">
+        <div class="big">~4¢ LLM cost / brief</div>
+        <div class="small">vs ~$12.50 RM time reclaimed · 300× return</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━ SLIDE 4: PIPELINE ━━━━ -->
+<div class="slide s4">
+  <div class="slide-header" style="margin-bottom:18px;">
+    <div class="section-title">Architecture</div>
+    <h2>4-Phase Agentic Pipeline</h2>
+  </div>
+  <div class="pipeline">
+    <div class="phase phase-gather">
+      <div class="phase-num">1</div>
+      <div class="phase-icon"></div>
+      <div class="phase-label">Gather</div>
+      <div class="phase-lines">
+        <div class="phase-line"><strong>6 read-only tools</strong></div>
+        <div class="phase-line">CRM → Postgres</div>
+        <div class="phase-line">Plaid Sandbox API</div>
+        <div class="phase-line">Accounts, txns, holdings, liabilities, identity</div>
+        <div class="phase-line">Eager (Java) or LLM-driven mode</div>
+      </div>
+    </div>
+    <div class="phase-arrow">→</div>
+    <div class="phase phase-delta">
+      <div class="phase-num">2</div>
+      <div class="phase-icon"></div>
+      <div class="phase-label">Delta</div>
+      <div class="phase-lines">
+        <div class="phase-line"><strong>Pure Java · zero LLM tokens</strong></div>
+        <div class="phase-line">Computes ChangeReport</div>
+        <div class="phase-line">Large outflows vs threshold</div>
+        <div class="phase-line">Maturity alerts (CDs)</div>
+        <div class="phase-line">Dormancy detection</div>
+      </div>
+    </div>
+    <div class="phase-arrow">→</div>
+    <div class="phase phase-synth">
+      <div class="phase-num">3</div>
+      <div class="phase-icon"></div>
+      <div class="phase-label">Synthesize</div>
+      <div class="phase-lines">
+        <div class="phase-line"><strong>1 Claude Sonnet 4.6 call</strong></div>
+        <div class="phase-line">Prose from ChangeReport only</div>
+        <div class="phase-line">Citation validation</div>
+        <div class="phase-line">Strips unresolvable IDs</div>
+        <div class="phase-line">Returns BriefSchema JSON</div>
+      </div>
+    </div>
+    <div class="phase-arrow">→</div>
+    <div class="phase phase-stream">
+      <div class="phase-num">4</div>
+      <div class="phase-icon"></div>
+      <div class="phase-label">Stream</div>
+      <div class="phase-lines">
+        <div class="phase-line"><strong>SSE events per phase</strong></div>
+        <div class="phase-line">Live agent feed in UI</div>
+        <div class="phase-line">Brief JSON rendered</div>
+        <div class="phase-line">Clickable citations</div>
+        <div class="phase-line">Print / Save as PDF</div>
+      </div>
+    </div>
+  </div>
+  <div class="s4-foot">Single HTTP request (SSE stream) · GET /briefs/{clientId}/stream · Virtual threads</div>
+</div>
+
+<!-- ━━━━ SLIDE 5: DIFFERENTIATOR ━━━━ -->
+<div class="slide s5">
+  <div class="slide-header">
+    <div class="section-title">The Differentiator</div>
+    <h2>Deterministic Delta + Constrained Synthesis</h2>
+  </div>
+  <div class="vs-grid">
+    <div class="vs-col bad">
+      <div class="vs-header">
+        <div class="vs-icon">❌</div>
+        <div class="vs-heading">Typical LLM Approach</div>
+      </div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">LLM reads raw data and computes deltas itself</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">Model may hallucinate balances, dates, or amounts</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">No way to audit where a number came from</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">One bad inference poisons the whole brief</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">Token cost scales with data size and reasoning complexity</div></div>
+    </div>
+    <div class="vs-separator">
+      <div class="vs-vs">VS</div>
+    </div>
+    <div class="vs-col good">
+      <div class="vs-header">
+        <div class="vs-icon">✅</div>
+        <div class="vs-heading">Our Approach</div>
+      </div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">Java computes all deltas — zero LLM tokens</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">ChangeReport is the single ground-truth source</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">Claude writes prose ONLY from that report</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">Citation validator strips any unresolvable ID</div></div>
+      <div class="vs-item"><div class="vs-bullet">•</div><div class="vs-text">One Sonnet call = predictable, minimal cost (~4¢)</div></div>
+    </div>
+  </div>
+  <div class="vs-foot">The same architecture that eliminates hallucinations also minimises token cost — one decision, two wins.</div>
+</div>
+
+<!-- ━━━━ SLIDE 6: DEMO SCREENSHOT ━━━━ -->
+<div class="slide s6">
+  <div class="slide-header" style="margin-bottom:10px;">
+    <div class="section-title" style="color:var(--teal)">Live Demo</div>
+    <h2>Robert Harrington · Mass Affluent Hero Client</h2>
+  </div>
+  <div class="screenshot-frame">
+    <img src="../docs/screenshots/brief-example.png" alt="RM Brief UI screenshot">
+  </div>
+  <div class="s6-foot">http://localhost:8080 · Generate Brief → live SSE stream → clickable citations · Print / Save as PDF</div>
+</div>
+
+<!-- ━━━━ SLIDE 7: CITATIONS ━━━━ -->
+<div class="slide s7">
+  <div class="slide-header" style="margin-bottom:16px;">
+    <div class="section-title">Trust Layer</div>
+    <h2 style="color:var(--white)">Citations: Every Claim Is Auditable</h2>
+  </div>
+  <div class="citation-flow">
+    <div class="cf-step">
+      <div class="cf-icon">🏦</div>
+      <div class="cf-label">Plaid API<br>returns data</div>
+    </div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step">
+      <div class="cf-icon">⚙️</div>
+      <div class="cf-label">Java builds<br>ChangeReport</div>
+    </div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step">
+      <div class="cf-icon">🤖</div>
+      <div class="cf-label">Claude writes<br>prose + cites IDs</div>
+    </div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step">
+      <div class="cf-icon">🔍</div>
+      <div class="cf-label">Validator checks<br>every citation ID</div>
+    </div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step">
+      <div class="cf-icon">✅</div>
+      <div class="cf-label">Brief delivered<br>with real IDs only</div>
+    </div>
+  </div>
+  <div class="cite-outcomes">
+    <div class="cite-card good">
+      <div class="cite-card-title">✅ Citation resolves</div>
+      <div class="cite-card-body">Chip is clickable — shows the account name, type, balance and actual Plaid account ID. RM can verify the source of any claim in one click.</div>
+      <div class="cite-example">"Plaid Money Market · depository · $43,200<br>Account: 4qvp8nXN4Mir37J6…"</div>
+    </div>
+    <div class="cite-card bad">
+      <div class="cite-card-title">🔴 Citation doesn't resolve</div>
+      <div class="cite-card-body">Chip renders red and the ID is stripped before reaching the RM. Hallucinated IDs are caught by <code>SynthesisService.validateCitations()</code> and never silently reach the output.</div>
+      <div class="cite-example">Unresolvable ID → stripped from brief<br>Red chip visible to reviewer during QA</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━ SLIDE 8: BUSINESS CASE ━━━━ -->
+<div class="slide s8">
+  <div class="slide-header" style="margin-bottom:16px;">
+    <div class="section-title" style="color:var(--teal)">Business Case</div>
+    <h2 style="color:var(--white)">300× ROI on Every Brief</h2>
+  </div>
+  <div class="biz-hero">
+    <div class="biz-stat mint"><div class="big">~4¢</div><div class="lbl">LLM cost per brief</div></div>
+    <div class="biz-stat teal"><div class="big">$12.50</div><div class="lbl">RM time value reclaimed</div></div>
+    <div class="biz-stat warn"><div class="big">300×</div><div class="lbl">return on each brief</div></div>
+    <div class="biz-stat ice"><div class="big">$820K</div><div class="lbl">50-RM pilot / year value</div></div>
+  </div>
+  <div class="biz-detail">
+    <div class="detail-card">
+      <h3>Per-Brief Cost Breakdown</h3>
+      <div class="detail-row"><span class="k">Gather — 6 Java tools</span><span class="v" style="color:var(--mint)">$0.00</span></div>
+      <div class="detail-row"><span class="k">Delta — DeltaService (Java)</span><span class="v" style="color:var(--mint)">$0.00</span></div>
+      <div class="detail-divider"></div>
+      <div class="detail-row"><span class="k">Synthesis input (~5k tokens)</span><span class="v">$0.015</span></div>
+      <div class="detail-row"><span class="k">Synthesis output (~1.5k tokens)</span><span class="v">$0.023</span></div>
+      <div class="detail-divider"></div>
+      <div class="detail-row total"><span class="k">Total per brief</span><span class="v">~$0.04</span></div>
+    </div>
+    <div class="detail-card">
+      <h3>Assumptions</h3>
+      <div class="detail-row"><span class="k">Manual prep per meeting</span><span class="v">10 min</span></div>
+      <div class="detail-row"><span class="k">RM fully-loaded cost</span><span class="v">$75 / hr</span></div>
+      <div class="detail-row"><span class="k">Meetings per day</span><span class="v">6</span></div>
+      <div class="detail-row"><span class="k">Working days / year</span><span class="v">220</span></div>
+      <div class="detail-row"><span class="k">Briefs / RM / year</span><span class="v">~1,320</span></div>
+      <div class="detail-divider"></div>
+      <div class="detail-row total"><span class="k">Annual LLM cost / RM</span><span class="v">~$53</span></div>
+    </div>
+    <div class="detail-card">
+      <h3>Pilot Scale (50 RMs)</h3>
+      <div class="detail-row"><span class="k">Annual LLM cost</span><span class="v">~$2,600</span></div>
+      <div class="detail-row"><span class="k">Infra (3 small containers)</span><span class="v">~$4K/yr</span></div>
+      <div class="detail-row"><span class="k">One-time implementation</span><span class="v">~$50K</span></div>
+      <div class="detail-divider"></div>
+      <div class="detail-row"><span class="k">Hours reclaimed / year</span><span class="v">~11,000 hrs</span></div>
+      <div class="detail-row total"><span class="k">Break-even</span><span class="v">&lt; 1 month</span></div>
+    </div>
+  </div>
+  <div class="biz-foot">Swap $75/hr and 10 min with M&T's actual figures — the ratio holds because of the architecture, not in spite of it.</div>
+</div>
+
+<!-- ━━━━ SLIDE 9: TECH STACK ━━━━ -->
+<div class="slide s9">
+  <div class="slide-header">
+    <div class="section-title">Under the Hood</div>
+    <h2>Tech Stack &amp; Agentic Design</h2>
+  </div>
+  <div class="s9-grid">
+    <div class="stack-list">
+      <div class="stack-item">
+        <div class="stack-icon">☕</div>
+        <div class="stack-body">
+          <div class="stack-layer">API</div>
+          <div class="stack-tech">Java 21 · Spring Boot 4.0 · Maven · Virtual Threads</div>
+        </div>
+      </div>
+      <div class="stack-item mint-border">
+        <div class="stack-icon">🤖</div>
+        <div class="stack-body">
+          <div class="stack-layer" style="color:var(--mint)">LLM Runtime</div>
+          <div class="stack-tech">Claude Sonnet 4.6 · anthropic-java 2.41.0</div>
+        </div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">🏦</div>
+        <div class="stack-body">
+          <div class="stack-layer">Financial Data</div>
+          <div class="stack-tech">Plaid Sandbox · plaid-java 35.0.0 (read-only)</div>
+        </div>
+      </div>
+      <div class="stack-item warn-border">
+        <div class="stack-icon">🗄️</div>
+        <div class="stack-body">
+          <div class="stack-layer" style="color:var(--warn)">Data</div>
+          <div class="stack-tech">PostgreSQL 16 · Flyway migrations · Redis 7</div>
+        </div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">📡</div>
+        <div class="stack-body">
+          <div class="stack-layer">Streaming</div>
+          <div class="stack-tech">SSE (Server-Sent Events) per phase transition</div>
+        </div>
+      </div>
+      <div class="stack-item mint-border">
+        <div class="stack-icon">🖥️</div>
+        <div class="stack-body">
+          <div class="stack-layer" style="color:var(--mint)">UI</div>
+          <div class="stack-tech">Single static HTML/JS — no build step · Docker Compose</div>
+        </div>
+      </div>
+    </div>
+    <div class="agentic-block">
+      <h3>Why It's Agentic</h3>
+      <div class="agentic-item">
+        <div class="agentic-title">Tool-Calling Loop</div>
+        <div class="agentic-desc">In LLM-driven mode, Claude plans and sequences 6 tool calls itself. In eager mode, Java calls them deterministically for speed.</div>
+      </div>
+      <div class="agentic-item">
+        <div class="agentic-title">Observable Pipeline</div>
+        <div class="agentic-desc">Every phase emits named SSE events — the live agent-activity feed in the UI shows exactly what the agent is doing.</div>
+      </div>
+      <div class="agentic-item">
+        <div class="agentic-title">Validated Output</div>
+        <div class="agentic-desc">Claude's synthesis is checked against ground-truth IDs from the ChangeReport before the brief is returned — never blind trust.</div>
+      </div>
+      <div class="agentic-item">
+        <div class="agentic-title">Toggle in Config</div>
+        <div class="agentic-desc"><code style="font-size:10px;color:var(--mint)">app.agent.eager-tool-calls: true/false</code> — switch between deterministic and full LLM orchestration without code changes.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━ SLIDE 10: ROADMAP ━━━━ -->
+<div class="slide s10">
+  <div class="slide-header">
+    <div class="section-title">Production Path</div>
+    <h2>From POC to Pilot in 8 Weeks</h2>
+  </div>
+  <div class="roadmap">
+    <div class="rm-item">
+      <div class="rm-week">Wks 1–3</div>
+      <div class="rm-body">
+        <div class="rm-title">FDX / Production Plaid Integration</div>
+        <div class="rm-note">Replace Plaid Sandbox with real bank data — the pipeline doesn't change, only the data connector</div>
+      </div>
+      <div class="rm-tag">Data Layer</div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-week">Wks 4–5</div>
+      <div class="rm-body">
+        <div class="rm-title">AuthN / AuthZ / Audit Logging</div>
+        <div class="rm-note">RM login, role scoping, full audit trail — every brief generated is traceable</div>
+      </div>
+      <div class="rm-tag">Security</div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-week">Wks 6–7</div>
+      <div class="rm-body">
+        <div class="rm-title">Productionise SSE + UI + Observability</div>
+        <div class="rm-note">Metrics, error handling, pilot UX polish — route Anthropic calls through sanctioned AI gateway</div>
+      </div>
+      <div class="rm-tag">Hardening</div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-week">Wk 8</div>
+      <div class="rm-body">
+        <div class="rm-title">Pilot UAT with 50 RMs</div>
+        <div class="rm-note">Feedback loop, threshold tuning (large-outflow-threshold, dormancy-days), segment expansion</div>
+      </div>
+      <div class="rm-tag">Pilot</div>
+    </div>
+  </div>
+  <div class="rm-foot">The POC is end-to-end working today. ~$50K one-time · 2 engineers · break-even in &lt; 1 month at pilot scale.</div>
+</div>
+
+<!-- ━━━━ SLIDE 11: CLOSE ━━━━ -->
+<div class="slide s11">
+  <div class="s11-top">
+    <div class="s11-eyebrow">M&T Bank AI Hackathon 2026</div>
+    <div class="s11-headline">One design decision.<br><span>Two wins.</span></div>
+    <div class="s11-sub">The architecture that makes it bank-grade is also what makes it affordable.</div>
+  </div>
+  <div class="win-row">
+    <div class="win-card">
+      <div class="win-icon">🏦</div>
+      <div class="win-title">Bank-Grade Trust</div>
+      <div class="win-desc">Deterministic delta computation + citation validation guarantees no hallucinated numbers reach the Relationship Manager. Every claim traces to a real account ID or transaction ID.</div>
+    </div>
+    <div class="win-card">
+      <div class="win-icon">💰</div>
+      <div class="win-title">Minimal Token Cost</div>
+      <div class="win-desc">One right-sized Claude Sonnet call per brief — 4¢ in, $12.50 in RM time out. 300× return. At 50 RMs the pilot costs ~$2,600/yr in model tokens vs ~$825,000/yr in time reclaimed.</div>
+    </div>
+    <div class="win-card">
+      <div class="win-icon">🚀</div>
+      <div class="win-title">Production-Ready Path</div>
+      <div class="win-desc">End-to-end working POC today. FDX integration + AuthN/AuthZ is the primary hardening work. The agentic pipeline, citation layer, and cost model don't change at production scale.</div>
+    </div>
+  </div>
+  <div class="s11-foot">All data synthetic · Plaid Sandbox only · No customer PII committed or transmitted · AI-assistance disclosed in docs/model-usage.md</div>
+</div>
+
+</body>
+</html>

@@ -38,14 +38,18 @@ public class SynthesisService {
             1. Use ONLY the facts provided in the structured data below. Never invent numbers, \
             dates, account names, or transaction details.
             2. Every item in changedSinceLastMeeting, watchOuts, and opportunities MUST include \
-            at least one citation drawn from the actual accountId or transactionId values present \
-            in the ChangeReport. Do not fabricate citation IDs.
+            at least one citation drawn from the actual accountId, transactionId, productType or \
+            promiseId values present in the ChangeReport. Do not fabricate citation IDs.
             3. talkingPoints must be grounded in specific data points — cite the source in the \
             talking point text (e.g. "the $5,850 transfer on 2026-06-12").
             4. Respond with ONLY a valid JSON object. No markdown fences, no explanation, \
             no text outside the JSON.
             5. If data is insufficient for a section, write an honest brief statement rather \
             than guessing.
+            6. openPromises in the ChangeReport are commitments tracked from earlier meetings. \
+            Promises with status OVERDUE belong in watchOuts (severity high if the RM owns them); \
+            DUE_SOON promises belong in talkingPoints or watchOuts. Cite them by their promiseId \
+            and use their dueDate and daysUntilDue as given — do not recompute them.
 
             Output schema (respond with exactly this structure):
             {
@@ -162,6 +166,7 @@ public class SynthesisService {
         });
         // Maturity alerts have no Plaid ID — allow productType as a citation key
         report.maturityAlerts().forEach(m -> ids.add(m.productType()));
+        report.openPromises().forEach(p -> ids.add(p.promiseId()));
         log.debug("[synthesis] valid citation IDs: {}", ids);
         return ids;
     }

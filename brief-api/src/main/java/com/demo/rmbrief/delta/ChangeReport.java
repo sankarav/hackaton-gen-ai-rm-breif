@@ -27,8 +27,24 @@ public record ChangeReport(
         int daysSinceLastTransaction,
 
         // Opportunities
-        List<MaturityAlert> maturityAlerts
+        List<MaturityAlert> maturityAlerts,
+
+        // Commitments approved from post-meeting captures and still open
+        List<OpenPromise> openPromises
 ) {
+
+    /**
+     * An open follow-up commitment. Citation = promiseId ("promise-{id}").
+     * status: OVERDUE | DUE_SOON (within 7 days) | OPEN | NO_DUE_DATE.
+     */
+    public record OpenPromise(
+            String promiseId,
+            String text,
+            String owner,
+            String dueDate,
+            Integer daysUntilDue,
+            String status
+    ) {}
 
     /** One account with its current balance. Citation = accountId. */
     public record AccountSummary(

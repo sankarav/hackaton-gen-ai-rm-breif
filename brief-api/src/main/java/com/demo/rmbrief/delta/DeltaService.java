@@ -1,5 +1,7 @@
 package com.demo.rmbrief.delta;
 
+import com.demo.rmbrief.capture.ClientPromise;
+import com.demo.rmbrief.capture.ClientPromiseRepository;
 import com.demo.rmbrief.tools.CrmContextService;
 import com.demo.rmbrief.tools.PlaidToolService;
 import com.demo.rmbrief.tools.ToolResult;
@@ -29,6 +31,8 @@ public class DeltaService {
     /** Alert window for maturing products (days). */
     private static final int MATURITY_ALERT_DAYS = 60;
 
+    private static final int PROMISE_DUE_SOON_DAYS = 7;
+
     @Value("${app.delta.large-outflow-threshold:10000}")
     private double largeOutflowThreshold;
 
@@ -37,10 +41,12 @@ public class DeltaService {
 
     private final PlaidToolService plaidTools;
     private final CrmContextService crmContextService;
+    private final ClientPromiseRepository promises;
 
-    public DeltaService(PlaidToolService plaidTools, CrmContextService crmContextService) {
+    public DeltaService(PlaidToolService plaidTools, CrmContextService crmContextService, ClientPromiseRepository promises) {
         this.plaidTools = plaidTools;
         this.crmContextService = crmContextService;
+        this.promises = promises;
     }
 
     /**
@@ -139,6 +145,19 @@ public class DeltaService {
             }
         }
 
+        // ── 7. Open promises (approved captures) ─────────────────────────────
+        List<ChangeReport.OpenPromise> openPromises = promises
+                .findByClientIdAndStatusOrderByDueDateAsc(clientId, ClientPromise.Status.OPEN).stream()
+                .map(p -> {
+                    Integer daysUntil = p.dueDate != null ? (int) ChronoUnit.DAYS.between(today, p.dueDate) : null;
+                    String status = daysUntil == null ? "NO_DUE_DATE"
+                            : daysUntil < 0 ? "OVERDUE"
+                            : daysUntil <= PROMISE_DUE_SOON_DAYS ? "DUE_SOON" : "OPEN";
+                    return new ChangeReport.OpenPromise(p.citationId(), p.text, p.owner,
+                            p.dueDate != null ? p.dueDate.toString() : null, daysUntil, status);
+                })
+                .toList();
+
         ChangeReport report = new ChangeReport(
                 clientId,
                 lastMeetingDate,
@@ -149,11 +168,12 @@ public class DeltaService {
                 txns.size(),
                 dormant,
                 daysSinceLastTxn,
-                maturityAlerts
+                maturityAlerts,
+                openPromises
         );
 
-        log.info("[delta] ChangeReport complete for {}: outflows={} maturityAlerts={} dormant={}",
-                clientId, largeOutflows.size(), maturityAlerts.size(), dormant);
+        log.info("[delta] ChangeReport complete for {}: outflows={} maturityAlerts={} dormant={} openPromises={}",
+                clientId, largeOutflows.size(), maturityAlerts.size(), dormant, openPromises.size());
         return report;
     }
 

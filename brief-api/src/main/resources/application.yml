@@ -2,6 +2,9 @@ server:
   port: 8080
 
 spring:
+  web:
+    error:
+      include-message: always   # surface validation reasons (ResponseStatusException) to the UI
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rmbrief}
     username: ${SPRING_DATASOURCE_USERNAME:rm}
@@ -26,6 +29,10 @@ spring:
       timeout: 2000
   cache:
     type: none  # overridden to 'redis' when app.cache.enabled=true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 200MB
 
 # Actuator
 management:
@@ -48,3 +55,28 @@ app:
     eager-tool-calls: true   # false = let Claude plan which tools to call
   plaid:
     env: ${PLAID_ENV:sandbox}
+
+  # Post-meeting capture (notes / photos / voice memo / consented recording → reviewed CRM entry)
+  capture:
+#    model: ${CAPTURE_MODEL:claude-opus-5-5}
+    model: ${CAPTURE_MODEL:claude-sonnet-5}
+#    model: ${CAPTURE_MODEL:claude-haiku-4-5-20251001} # cheapest
+    review-reminder: ${CAPTURE_REVIEW_REMINDER:48h}   # flag captures nobody has reviewed
+    retention:
+      notes: ${CAPTURE_RETENTION_NOTES:30d}           # raw photos / voice memos
+      recording: ${CAPTURE_RETENTION_RECORDING:7d}    # raw client meeting audio — stricter
+  media:
+    root: ${MEDIA_ROOT:./data/media}
+    encryption-key: ${MEDIA_ENCRYPTION_KEY:}          # base64 AES-256 key: openssl rand -base64 32
+  transcription:
+    provider: ${TRANSCRIPTION_PROVIDER:local-whisper}  # local-whisper | openai
+    language: en
+    local-whisper:
+      url: ${WHISPER_URL:http://localhost:9000}
+    openai:
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      api-key: ${OPENAI_API_KEY:}
+      model: ${OPENAI_TRANSCRIPTION_MODEL:whisper-1}
+  temporal:
+    target: ${TEMPORAL_TARGET:localhost:7233}
+    namespace: ${TEMPORAL_NAMESPACE:default}

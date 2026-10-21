@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RM Meeting Capture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f6f9; color: #1a2332; min-height: 100vh; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  header { background: #0a2342; color: white; padding: 14px 32px; display: flex; align-items: center; gap: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  header .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  header .tagline { font-size: 12px; color: #8ba7c7; }
+  nav { display: flex; gap: 4px; margin-left: auto; }
+  nav a { color: #c9d8ea; text-decoration: none; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; }
+  nav a:hover { background: rgba(255,255,255,0.08); }
+  nav a.active { background: rgba(255,255,255,0.14); color: white; }
+
+  main { max-width: 1360px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  .card { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+  .card-title { padding: 12px 16px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #6b7a99; border-bottom: 1px solid #eef0f5; background: #f8f9fc; display: flex; align-items: center; gap: 8px; }
+  .card-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  label.field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #6b7a99; }
+  .field select, .field input[type=date], .field textarea, .field input[type=text] {
+    padding: 9px 11px; border: 1.5px solid #d0d7e3; border-radius: 7px; font-size: 14px; color: #1a2332; background: white; outline: none; }
+  .field select:focus, .field input:focus, .field textarea:focus { border-color: #2563eb; }
+  textarea { resize: vertical; line-height: 1.45; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; min-width: 0; }
+
+  .btn { padding: 9px 18px; background: #2563eb; color: white; border: none; border-radius: 7px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1d4ed8; }
+  .btn:disabled { background: #93a5c8; cursor: not-allowed; }
+  .btn.secondary { background: white; color: #1a2332; border: 1.5px solid #d0d7e3; }
+  .btn.secondary:hover { background: #f4f6f9; }
+  .btn.danger { background: white; color: #b91c1c; border: 1.5px solid #fecaca; }
+  .btn.danger:hover { background: #fef2f2; }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn.rec { background: #dc2626; }
+  .btn.rec:hover { background: #b91c1c; }
+
+  .segmented { display: flex; border: 1.5px solid #d0d7e3; border-radius: 8px; overflow: hidden; }
+  .segmented button { flex: 1; padding: 8px 6px; background: white; border: none; font-size: 13px; font-weight: 600; color: #4b5874; cursor: pointer; }
+  .segmented button + button { border-left: 1.5px solid #d0d7e3; }
+  .segmented button.on { background: #0a2342; color: white; }
+  .segmented button:disabled { color: #b4bccc; cursor: not-allowed; background: #f8f9fc; }
+  .hint { font-size: 12px; color: #6b7a99; line-height: 1.45; }
+  .hint.warn { color: #92400e; }
+
+  .consent { border: 1.5px solid #fde68a; background: #fffbeb; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .consent .script { font-size: 13px; font-style: italic; color: #78350f; }
+  .consent label { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; color: #78350f; cursor: pointer; }
+
+  .recorder { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rec-indicator { display: none; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #dc2626; letter-spacing: 0.5px; }
+  .rec-indicator.live { display: inline-flex; }
+  .rec-indicator.paused { display: inline-flex; color: #d97706; }
+  .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; animation: pulse 1s infinite; }
+  .rec-indicator.paused .rec-dot { animation: none; }
+  .timer { font-variant-numeric: tabular-nums; font-size: 13px; color: #374151; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  audio { width: 100%; height: 36px; }
+
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumb { position: relative; width: 64px; height: 64px; border-radius: 6px; overflow: hidden; border: 1px solid #d0d7e3; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb button { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: white; font-size: 11px; cursor: pointer; line-height: 18px; }
+
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .switch input { width: 40px; height: 22px; appearance: none; background: #d1d5db; border-radius: 11px; position: relative; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+  .switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: white; transition: left 0.15s; }
+  .switch input:checked { background: #059669; }
+  .switch input:checked::after { left: 21px; }
+
+  .capture-list { display: flex; flex-direction: column; max-height: 360px; overflow-y: auto; }
+  .capture-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid #f0f2f7; cursor: pointer; background: white; border-left: 3px solid transparent; text-align: left; }
+  .capture-row:hover { background: #f8f9fc; }
+  .capture-row.selected { background: #eef3ff; }
+  .capture-row .who { flex: 1; min-width: 0; }
+  .capture-row .name { font-size: 13px; font-weight: 600; }
+  .capture-row .meta { font-size: 11px; color: #6b7a99; }
+
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; white-space: nowrap; border: 1px solid transparent; }
+  .b-blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  .b-amber { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+  .b-green { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+  .b-red { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .b-gray { background: #f3f4f6; color: #4b5563; border-color: #e5e7eb; }
+  .b-purple { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+
+  .empty { padding: 60px 24px; text-align: center; color: #9ca3af; font-size: 14px; }
+  .empty .icon { font-size: 36px; margin-bottom: 10px; }
+
+  .detail-head { background: linear-gradient(135deg, #0a2342 0%, #1e3a5f 100%); color: white; border-radius: 10px; padding: 18px 22px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(10,35,66,0.3); }
+  .detail-head .title { font-size: 19px; font-weight: 700; }
+  .detail-head .sub { font-size: 12px; color: #8ba7c7; margin-top: 3px; }
+  .detail-head .badges { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .stepper { display: flex; gap: 0; padding: 18px 16px; overflow-x: auto; }
+  .step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; min-width: 90px; }
+  .step::before { content: ""; position: absolute; top: 11px; left: -50%; width: 100%; height: 2px; background: #e5e7eb; z-index: 0; }
+  .step:first-child::before { display: none; }
+  .step .dot { width: 24px; height: 24px; border-radius: 50%; background: #e5e7eb; color: #6b7a99; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; z-index: 1; }
+  .step .lbl { font-size: 11px; color: #6b7a99; text-align: center; }
+  .step.done .dot { background: #10b981; color: white; }
+  .step.done::before, .step.active::before { background: #10b981; }
+  .step.active .dot { background: #2563eb; color: white; animation: pulse 1.2s infinite; }
+  .step.active .lbl { color: #1d4ed8; font-weight: 700; }
+  .step-detail { padding: 0 16px 16px; font-size: 13px; color: #374151; text-align: center; }
+
+  .review { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; align-items: start; }
+  .source-list { display: flex; flex-direction: column; max-height: 640px; overflow-y: auto; }
+  .seg { display: flex; gap: 10px; padding: 8px 14px; border-bottom: 1px solid #f3f4f6; font-size: 13px; line-height: 1.45; transition: background 0.3s; }
+  .seg.flash { background: #fef9c3; }
+  .seg.unclear { background: #fffbeb; }
+  .seg .n { flex-shrink: 0; font-family: 'SF Mono', Menlo, monospace; font-size: 11px; color: #6b7a99; width: 28px; padding-top: 2px; }
+  .seg .meta { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 3px; }
+  .seg .speaker-inferred { font-style: italic; }
+  .media-strip { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid #eef0f5; }
+  .media-strip img { height: 84px; border-radius: 6px; border: 1px solid #d0d7e3; cursor: zoom-in; }
+  .media-strip .gone { font-size: 12px; color: #6b7a99; font-style: italic; }
+
+  .items { display: flex; flex-direction: column; gap: 14px; }
+  .group-title { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #6b7a99; margin: 4px 2px -4px; }
+  .item { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1.5px solid transparent; }
+  .item.pending { border-color: #f59e0b; }
+  .item.rejected { opacity: 0.55; }
+  .item.rejected textarea { text-decoration: line-through; }
+  .item-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .item-head .spacer { flex: 1; }
+  .item textarea { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 7px; padding: 8px 10px; font-size: 14px; min-height: 42px; outline: none; }
+  .item textarea:focus { border-color: #2563eb; }
+  .kv { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #374151; flex-wrap: wrap; }
+  .kv .phrase { color: #6b7a99; font-style: italic; }
+  .kv input[type=date], .kv select { padding: 4px 8px; border: 1.5px solid #d0d7e3; border-radius: 6px; font-size: 12.5px; }
+  .chip { font-size: 11.5px; background: #f0f4ff; color: #3b5bdb; border: 1px solid #c5d0f5; border-radius: 4px; padding: 2px 7px; }
+  .chip.muted { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
+  .flags { display: flex; flex-direction: column; gap: 4px; }
+  .flag { font-size: 12px; color: #92400e; background: #fffbeb; border-radius: 6px; padding: 5px 9px; }
+  .flag.compliance { color: #6d28d9; background: #f5f3ff; }
+  .flag.note { color: #4b5563; background: #f3f4f6; }
+  .src-chips { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; font-size: 11px; color: #6b7a99; }
+  .src-chip { font-family: 'SF Mono', Menlo, monospace; font-size: 11px; background: white; border: 1px solid #d0d7e3; border-radius: 4px; padding: 1px 6px; cursor: pointer; }
+  .src-chip:hover { background: #eef3ff; border-color: #93c5fd; }
+  .decide { display: flex; gap: 6px; }
+  .decide button { padding: 4px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1.5px solid #d0d7e3; background: white; cursor: pointer; }
+  .decide button.keep.on { background: #059669; border-color: #059669; color: white; }
+  .decide button.drop.on { background: #6b7280; border-color: #6b7280; color: white; }
+
+  .actionbar { position: sticky; bottom: 12px; background: white; border-radius: 10px; box-shadow: 0 4px 16px rgba(10,35,66,0.18); padding: 12px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .actionbar .status { flex: 1; font-size: 13px; color: #374151; }
+
+  .notice { border-radius: 10px; padding: 16px 18px; font-size: 14px; line-height: 1.5; display: flex; gap: 12px; align-items: flex-start; }
+  .notice.ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+  .notice.err { background: #fef2f2; border: 1px solid #fecaca; color: #7f1d1d; }
+  .notice.info { background: #f8f9fc; border: 1px solid #e5e7eb; color: #374151; }
+  .notice a { color: inherit; font-weight: 700; }
+
+  .promise-row { display: flex; gap: 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f0f2f7; font-size: 13px; }
+  .promise-row .t { flex: 1; }
+  details.audit summary { cursor: pointer; padding: 12px 16px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #6b7a99; }
+  .audit-row { display: grid; grid-template-columns: 150px 150px 1fr; gap: 10px; padding: 6px 16px; font-size: 12px; border-top: 1px solid #f3f4f6; font-family: 'SF Mono', Menlo, monospace; color: #374151; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a2332; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); z-index: 100; display: none; max-width: 90vw; }
+  .toast.err { background: #b91c1c; }
+
+  @media (max-width: 980px) {
+    main { grid-template-columns: 1fr; padding: 12px; }
+    .review { grid-template-columns: 1fr; }
+    header { padding: 12px 16px; }
+    .audit-row { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">RM Intelligence</div>
+    <div class="tagline">Post-meeting capture · reviewed before it reaches the CRM</div>
+  </div>
+  <nav>
+    <a href="/">Pre-meeting brief</a>
+    <a href="/capture.html" class="active">Meeting capture</a>
+  </nav>
+</header>
+
+<main>
+  <div class="col">
+    <div class="card">
+      <div class="card-title">✍️ New capture</div>
+      <div class="card-body">
+        <div class="row">
+          <label class="field">Client
+            <select id="client"><option value="">Loading…</option></select>
+          </label>
+          <label class="field" style="flex:0 0 150px">Meeting date
+            <input type="date" id="meeting-date">
+          </label>
+        </div>
+
+        <label class="field">Typed notes
+          <textarea id="notes" rows="5" placeholder="Anything you jotted down — bullet points are fine."></textarea>
+        </label>
+
+        <label class="field">Photos of handwritten notes
+          <input type="file" id="photos" accept="image/jpeg,image/png,image/webp,image/gif" capture="environment" multiple>
+        </label>
+        <div class="thumbs" id="thumbs"></div>
+
+        <div class="field" style="gap:8px">
+          <span style="font-size:12px;font-weight:600;color:#6b7a99">Audio</span>
+          <div class="segmented" id="audio-mode">
+            <button type="button" data-mode="" class="on">None</button>
+            <button type="button" data-mode="VOICE_MEMO">Voice memo</button>
+            <button type="button" data-mode="RECORDING" id="mode-recording">Record meeting</button>
+          </div>
+          <div class="hint" id="mode-hint"></div>
+        </div>
+
+        <div id="audio-panel" style="display:none;flex-direction:column;gap:10px">
+          <div class="consent" id="consent-box" style="display:none">
+            <div class="script">Ask first: “Is it all right if I record our conversation so my notes are accurate? You can ask me to stop at any time.”</div>
+            <label><input type="checkbox" id="consent-check"> Client agreed to be recorded</label>
+            <div class="hint warn">Say the question again once recording starts so the consent is on the audio.</div>
+          </div>
+          <div class="recorder">
+            <button type="button" class="btn rec small" id="rec-start">● Record</button>
+            <button type="button" class="btn secondary small" id="rec-pause" disabled>Pause</button>
+            <button type="button" class="btn secondary small" id="rec-stop" disabled>Stop</button>
+            <span class="rec-indicator" id="rec-indicator"><span class="rec-dot"></span><span id="rec-label">REC</span></span>
+            <span class="timer" id="rec-timer">0:00</span>
+          </div>
+          <audio id="audio-preview" controls style="display:none"></audio>
+          <label class="field">…or upload an audio file
+            <input type="file" id="audio-file" accept="audio/*">
+          </label>
+        </div>
+
+        <button class="btn" id="submit">Process capture</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗂️ Recent captures <span style="margin-left:auto"><button class="btn secondary small" id="refresh-list">Refresh</button></span></div>
+      <div class="capture-list" id="capture-list"><div class="empty" style="padding:24px">No captures yet.</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🛡️ Compliance setting</div>
+      <div class="card-body">
+        <label class="switch">
+          <span style="font-size:13px;font-weight:600">Allow meeting recording</span>
+          <input type="checkbox" id="policy-toggle">
+        </label>
+        <div class="hint" id="policy-meta"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col" id="detail">
+    <div class="card"><div class="empty"><div class="icon">🎙️</div>Capture notes, a photo or a voice memo after a meeting.<br>The draft CRM entry appears here for your review.</div></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let policy = { recordingEnabled: false };
+let audioMode = '';
+let photoFiles = [];
+let recordedBlob = null;
+let recorder = null, recChunks = [], recSeconds = 0, recTimer = null, recStream = null;
+let consentAt = null;
+let currentId = null;
+let currentDetail = null;
+let stream = null;
+
+const PROCESSING = ['RECEIVED', 'TRANSCRIBING', 'LABELLING_SPEAKERS', 'EXTRACTING', 'RESOLVING'];
+const STATE_LABEL = {
+  RECEIVED: 'Queued', TRANSCRIBING: 'Transcribing', LABELLING_SPEAKERS: 'Labelling speakers', EXTRACTING: 'Extracting',
+  RESOLVING: 'Resolving', READY_FOR_REVIEW: 'Needs review', COMMITTED: 'Saved to CRM', REJECTED: 'Rejected',
+  FAILED: 'Failed', PURGED: 'Purged'
+};
+const STATE_BADGE = {
+  READY_FOR_REVIEW: 'b-amber', COMMITTED: 'b-green', REJECTED: 'b-gray', FAILED: 'b-red', PURGED: 'b-gray'
+};
+const CATEGORY = {
+  PROMISE: ['🤝', 'Promises & follow-ups'], LIFE_EVENT: ['🏡', 'Life events'], PRODUCT_INTEREST: ['💡', 'Product interest'],
+  CONCERN: ['⚠️', 'Concerns'], NEXT_MEETING: ['📅', 'Next meeting']
+};
+
+// ── Bootstrap ──────────────────────────────────────────────────────────────
+(async () => {
+  document.getElementById('meeting-date').value = today();
+  document.getElementById('meeting-date').max = today();
+  try {
+    const clients = await api('GET', '/clients');
+    document.getElementById('client').innerHTML = clients.map(c =>
+      `<option value="${esc(c.clientId)}">${esc(c.fullName)} · ${esc(c.segment)}</option>`).join('');
+    const pre = new URLSearchParams(location.search).get('client');
+    if (pre) document.getElementById('client').value = pre;
+  } catch (e) { toast('Could not load clients: ' + e.message, true); }
+  await loadPolicy();
+  await loadList();
+  const open = new URLSearchParams(location.search).get('capture');
+  if (open) openCapture(Number(open));
+})();
+
+// ── API helper ─────────────────────────────────────────────────────────────
+async function api(method, url, body) {
+  const opts = { method, headers: {} };
+  if (body instanceof FormData) opts.body = body;
+  else if (body !== undefined) { opts.body = JSON.stringify(body); opts.headers['Content-Type'] = 'application/json'; }
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  let json = null;
+  try { json = text ? JSON.parse(text) : null; } catch (_) {}
+  if (!res.ok) throw new Error((json && (json.message || json.detail || json.error)) || ('HTTP ' + res.status));
+  return json;
+}
+
+// ── Policy ─────────────────────────────────────────────────────────────────
+async function loadPolicy() {
+  try {
+    policy = await api('GET', '/policy/recording');
+  } catch (e) { toast('Could not load recording policy', true); }
+  document.getElementById('policy-toggle').checked = policy.recordingEnabled;
+  document.getElementById('policy-meta').textContent = policy.updatedAt
+    ? `Last changed by ${policy.updatedBy} · ${fmtTime(policy.updatedAt)}` : '';
+  const recBtn = document.getElementById('mode-recording');
+  recBtn.disabled = !policy.recordingEnabled;
+  recBtn.title = policy.recordingEnabled ? '' : 'Turned off by your compliance team';
+  if (!policy.recordingEnabled && audioMode === 'RECORDING') setAudioMode('');
+  updateModeHint();
+}
+
+document.getElementById('policy-toggle').addEventListener('change', async e => {
+  try {
+    policy = await api('PUT', '/admin/recording-policy', { recordingEnabled: e.target.checked });
+    toast(policy.recordingEnabled ? 'Meeting recording allowed' : 'Meeting recording turned off');
+  } catch (err) { toast(err.message, true); }
+  loadPolicy();
+});
+
+// ── Audio mode & recorder ──────────────────────────────────────────────────
+document.querySelectorAll('#audio-mode button').forEach(b =>
+  b.addEventListener('click', () => { if (!b.disabled) setAudioMode(b.dataset.mode); }));
+
+function setAudioMode(mode) {
+  if (recorder && recorder.state !== 'inactive') { toast('Stop the recording first', true); return; }
+  if (mode !== audioMode) clearAudio();
+  audioMode = mode;
+  document.querySelectorAll('#audio-mode button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  document.getElementById('audio-panel').style.display = mode ? 'flex' : 'none';
+  document.getElementById('consent-box').style.display = mode === 'RECORDING' ? 'flex' : 'none';
+  document.getElementById('consent-check').checked = false;
+  consentAt = null;
+  updateRecorderButtons();
+  updateModeHint();
+}
+
+function updateModeHint() {
+  const hint = document.getElementById('mode-hint');
+  if (audioMode === 'VOICE_MEMO') hint.textContent = 'Dictate your own summary after the meeting. Treated as your words.';
+  else if (audioMode === 'RECORDING') hint.textContent = 'Records the conversation. Requires client consent; RM and client speech are separated for review.';
+  else hint.textContent = policy.recordingEnabled ? '' : 'Meeting recording is turned off by compliance. Voice memos are always available.';
+}
+
+document.getElementById('consent-check').addEventListener('change', e => {
+  consentAt = e.target.checked ? new Date().toISOString() : null;
+  updateRecorderButtons();
+});
+
+function updateRecorderButtons() {
+  const live = recorder && recorder.state !== 'inactive';
+  const needsConsent = audioMode === 'RECORDING' && !consentAt;
+  document.getElementById('rec-start').disabled = live || needsConsent;
+  document.getElementById('rec-pause').disabled = !live;
+  document.getElementById('rec-stop').disabled = !live;
+  document.getElementById('audio-file').disabled = needsConsent || live;
+  document.getElementById('rec-pause').textContent = recorder && recorder.state === 'paused' ? 'Resume' : 'Pause';
+  const ind = document.getElementById('rec-indicator');
+  ind.className = 'rec-indicator' + (recorder && recorder.state === 'recording' ? ' live' : recorder && recorder.state === 'paused' ? ' paused' : '');
+  document.getElementById('rec-label').textContent = recorder && recorder.state === 'paused' ? 'PAUSED' : 'REC';
+}
+
+document.getElementById('rec-start').addEventListener('click', async () => {
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) { toast('Microphone unavailable: ' + e.message, true); return; }
+  clearAudio();
+  const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
+  recorder = new MediaRecorder(recStream, type ? { mimeType: type } : undefined);
+  recChunks = [];
+  recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+  recorder.onstop = () => {
+    recordedBlob = new Blob(recChunks, { type: recorder.mimeType || 'audio/webm' });
+    recStream.getTracks().forEach(t => t.stop());
+    const prev = document.getElementById('audio-preview');
+    prev.src = URL.createObjectURL(recordedBlob);
+    prev.style.display = 'block';
+    clearInterval(recTimer);
+    updateRecorderButtons();
+  };
+  recorder.start(1000);
+  recSeconds = 0;
+  recTimer = setInterval(() => { if (recorder.state === 'recording') { recSeconds++; renderTimer(); } }, 1000);
+  renderTimer();
+  updateRecorderButtons();
+});
+
+document.getElementById('rec-pause').addEventListener('click', () => {
+  if (!recorder) return;
+  if (recorder.state === 'recording') recorder.pause(); else if (recorder.state === 'paused') recorder.resume();
+  updateRecorderButtons();
+});
+document.getElementById('rec-stop').addEventListener('click', () => { if (recorder) recorder.stop(); });
+
+document.getElementById('audio-file').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  recordedBlob = f;
+  const prev = document.getElementById('audio-preview');
+  prev.src = URL.createObjectURL(f);
+  prev.style.display = 'block';
+});
+
+function renderTimer() {
+  const m = Math.floor(recSeconds / 60), s = recSeconds % 60;
+  document.getElementById('rec-timer').textContent = `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function clearAudio() {
+  recordedBlob = null;
+  recorder = null;
+  recSeconds = 0;
+  renderTimer();
+  const prev = document.getElementById('audio-preview');
+  prev.removeAttribute('src');
+  prev.style.display = 'none';
+  document.getElementById('audio-file').value = '';
+}
+
+// ── Photos ─────────────────────────────────────────────────────────────────
+document.getElementById('photos').addEventListener('change', e => {
+  photoFiles = photoFiles.concat(Array.from(e.target.files)).slice(0, 6);
+  e.target.value = '';
+  renderThumbs();
+});
+function renderThumbs() {
+  const box = document.getElementById('thumbs');
+  box.innerHTML = '';
+  photoFiles.forEach((f, i) => {
+    const d = document.createElement('div');
+    d.className = 'thumb';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    const x = document.createElement('button');
+    x.textContent = '×';
+    x.title = 'Remove';
+    x.onclick = () => { photoFiles.splice(i, 1); renderThumbs(); };
+    d.append(img, x);
+    box.appendChild(d);
+  });
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+document.getElementById('submit').addEventListener('click', async () => {
+  if (recorder && recorder.state !== 'inactive') { toast('Stop the recording first', true); return; }
+  const notes = document.getElementById('notes').value.trim();
+  if (!notes && !photoFiles.length && !recordedBlob) { toast('Add notes, a photo or audio', true); return; }
+  if (audioMode && !recordedBlob && !notes && !photoFiles.length) { toast('Record or upload audio first', true); return; }
+
+  const fd = new FormData();
+  fd.append('clientId', document.getElementById('client').value);
+  fd.append('meetingDate', document.getElementById('meeting-date').value);
+  if (notes) fd.append('notes', notes);
+  photoFiles.forEach(f => fd.append('images', f, f.name));
+  if (recordedBlob && audioMode) {
+    const ext = (recordedBlob.type || '').includes('mp4') ? 'm4a' : (recordedBlob.name ? '' : 'webm');
+    fd.append('audio', recordedBlob, recordedBlob.name || `recording.${ext}`);
+    fd.append('audioMode', audioMode);
+    if (audioMode === 'RECORDING') { fd.append('consentGiven', 'true'); fd.append('consentAt', consentAt); }
+  }
+
+  const btn = document.getElementById('submit');
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  try {
+    const created = await api('POST', '/captures', fd);
+    document.getElementById('notes').value = '';
+    photoFiles = []; renderThumbs();
+    setAudioMode('');
+    await loadList();
+    openCapture(created.id);
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Process capture';
+  }
+});
+
+// ── Capture list ───────────────────────────────────────────────────────────
+document.getElementById('refresh-list').addEventListener('click', loadList);
+
+async function loadList() {
+  let rows = [];
+  try { rows = await api('GET', '/captures'); } catch (e) { toast('Could not load captures', true); return; }
+  const box = document.getElementById('capture-list');
+  if (!rows.length) { box.innerHTML = '<div class="empty" style="padding:24px">No captures yet.</div>'; return; }
+  box.innerHTML = rows.map(c => `
+    <div class="capture-row ${c.id === currentId ? 'selected' : ''}" data-id="${c.id}">
+      <div class="who">
+        <div class="name">${esc(c.clientName)}</div>
+        <div class="meta">#${c.id} · meeting ${esc(c.meetingDate)} · ${modeLabel(c.audioMode)}</div>
+      </div>
+      ${c.reviewReminderAt && c.state === 'READY_FOR_REVIEW' ? '<span class="badge b-red" title="Waiting for review">Overdue</span>' : ''}
+      ${stateBadge(c.state)}
+    </div>`).join('');
+  box.querySelectorAll('.capture-row').forEach(r => r.addEventListener('click', () => openCapture(Number(r.dataset.id))));
+}
+
+// ── Detail / progress ──────────────────────────────────────────────────────
+async function openCapture(id) {
+  currentId = id;
+  history.replaceState(null, '', `?capture=${id}`);
+  document.querySelectorAll('.capture-row').forEach(r => r.classList.toggle('selected', Number(r.dataset.id) === id));
+  if (stream) { stream.close(); stream = null; }
+  await refreshDetail();
+  const s = currentDetail.capture;
+  const inFlight = PROCESSING.includes(s.state) || (s.state === 'READY_FOR_REVIEW' && s.decisionPending);
+  if (inFlight) follow(id);
+}
+
+function follow(id) {
+  if (stream) stream.close();
+  stream = new EventSource(`/captures/${id}/stream`);
+  stream.addEventListener('state', e => {
+    if (id !== currentId) return;
+    const d = JSON.parse(e.data);
+    if (PROCESSING.includes(d.state) || (d.state === 'READY_FOR_REVIEW' && currentDetail.capture.decisionPending)) {
+      currentDetail.capture.state = d.state;
+      currentDetail.capture.stateDetail = d.detail;
+      render();
+    } else {
+      refreshDetail();
+      loadList();
+    }
+  });
+  const done = async () => {
+    if (stream) { stream.close(); stream = null; }
+    if (id !== currentId) return;
+    await refreshDetail();
+    loadList();
+  };
+  stream.onerror = done;
+}
+
+async function refreshDetail() {
+  const id = currentId;
+  let fresh;
+  try {
+    fresh = await api('GET', `/captures/${id}`);
+  } catch (e) { toast(e.message, true); return; }
+  if (id !== currentId) return;
+  currentDetail = fresh;
+  render();
+}
+
+function render() {
+  const d = currentDetail;
+  if (!d) return;
+  const c = d.capture;
+  const el = document.getElementById('detail');
+  const head = `
+    <div class="detail-head">
+      <div>
+        <div class="title">${esc(c.clientName)}</div>
+        <div class="sub">Capture #${c.id} · meeting ${esc(c.meetingDate)} · captured ${esc(fmtTime(c.createdAt))}</div>
+      </div>
+      <div class="badges">
+        ${c.audioMode ? `<span class="badge ${c.audioMode === 'RECORDING' ? 'b-purple' : 'b-blue'}">${modeLabel(c.audioMode)}</span>` : ''}
+        ${d.consent ? `<span class="badge ${d.consent.withdrawnAt ? 'b-red' : 'b-green'}">${d.consent.withdrawnAt ? 'Consent withdrawn' : 'Consent ' + fmtTime(d.consent.consentedAt)}</span>` : ''}
+        ${c.reviewReminderAt && c.state === 'READY_FOR_REVIEW' ? '<span class="badge b-red">Review overdue</span>' : ''}
+        ${stateBadge(c.state)}
+      </div>
+    </div>`;
+
+  let body = '';
+  if (PROCESSING.includes(c.state)) body = renderProgress(d);
+  else if (c.state === 'READY_FOR_REVIEW' && !c.decisionPending) body = renderReview(d);
+  else if (c.state === 'READY_FOR_REVIEW') body = `<div class="card">${renderStepper('SAVING')}<div class="step-detail">${esc(c.stateDetail || 'Saving…')}</div></div>`;
+  else if (c.state === 'COMMITTED') body = renderCommitted(d);
+  else if (c.state === 'FAILED') body = `<div class="notice err">💥 <div><b>Processing failed.</b> ${esc(c.stateDetail || '')}<br>The uploaded material is kept until the retention period ends. Create a new capture to try again.</div></div>`;
+  else if (c.state === 'REJECTED') body = `<div class="notice info">🚫 <div><b>Rejected</b> by ${esc(d.decidedBy || '')}${d.rejectReason ? ' — “' + esc(d.rejectReason) + '”' : ''}. Nothing was written to the CRM.</div></div>` + renderReadOnly(d);
+  else if (c.state === 'PURGED') body = `<div class="notice info">🗑️ <div><b>Purged.</b> ${esc(c.stateDetail || '')}. Only the audit trail remains.</div></div>`;
+
+  el.innerHTML = head + body + renderAudit(d);
+  if (c.state === 'READY_FOR_REVIEW' && !c.decisionPending) wireReview();
+  if (c.state === 'COMMITTED') loadPromises(c.clientId);
+}
+
+const STEPS = [
+  ['RECEIVED', 'Received'], ['TRANSCRIBING', 'Read & transcribe'], ['LABELLING_SPEAKERS', 'Speakers'],
+  ['EXTRACTING', 'Extract'], ['RESOLVING', 'Resolve'], ['READY_FOR_REVIEW', 'Your review'], ['SAVING', 'Save to CRM']
+];
+function renderStepper(state) {
+  const recording = currentDetail.capture.audioMode === 'RECORDING';
+  const steps = STEPS.filter(s => recording || s[0] !== 'LABELLING_SPEAKERS');
+  const idx = steps.findIndex(s => s[0] === state);
+  return `<div class="stepper">${steps.map((s, i) =>
+    `<div class="step ${i < idx ? 'done' : i === idx ? 'active' : ''}"><div class="dot">${i < idx ? '✓' : i + 1}</div><div class="lbl">${s[1]}</div></div>`).join('')}</div>`;
+}
+function renderProgress(d) {
+  return `<div class="card">${renderStepper(d.capture.state)}<div class="step-detail">${esc(d.capture.stateDetail || '')}</div></div>`;
+}
+
+// ── Review ─────────────────────────────────────────────────────────────────
+function renderReview(d) {
+  const summary = d.items.find(i => i.category === 'SUMMARY');
+  const others = d.items.filter(i => i.category !== 'SUMMARY');
+  const pending = d.items.filter(i => i.decision === 'PENDING').length;
+
+  const groups = Object.keys(CATEGORY).map(cat => {
+    const list = others.filter(i => i.category === cat);
+    if (!list.length) return '';
+    return `<div class="group-title">${CATEGORY[cat][0]} ${CATEGORY[cat][1]}</div>` + list.map(renderItem).join('');
+  }).join('');
+
+  return `
+  <div class="review">
+    <div class="card">
+      <div class="card-title">📄 Source (${d.segments.length} lines)</div>
+      ${renderMedia(d)}
+      <div class="source-list" id="source-list">${d.segments.map(renderSegment).join('')}</div>
+    </div>
+    <div class="items">
+      ${summary ? renderItem(summary) : ''}
+      ${groups || '<div class="notice info">No promises, life events or other signals were found.</div>'}
+    </div>
+  </div>
+  <div class="actionbar">
+    <div class="status" id="pending-status">${pendingText(pending)}</div>
+    ${d.consent && !d.consent.withdrawnAt ? '<button class="btn danger small" id="withdraw">Withdraw consent</button>' : ''}
+    <button class="btn secondary" id="reject">Reject</button>
+    <button class="btn" id="approve" ${pending ? 'disabled' : ''}>Approve &amp; save to CRM</button>
+  </div>`;
+}
+
+function pendingText(n) {
+  return n ? `<b>${n}</b> flagged item${n > 1 ? 's' : ''} need${n > 1 ? '' : 's'} a Keep / Drop decision before saving.`
+           : 'All items decided. Edit anything you like, then approve.';
+}
+
+function renderMedia(d) {
+  if (!d.media.length) return '';
+  return `<div class="media-strip">${d.media.map(m => {
+    if (m.deleted) return `<span class="gone">${m.kind === 'IMAGE' ? 'Photo' : 'Audio'} deleted under retention policy</span>`;
+    const url = `/captures/${d.capture.id}/media/${m.id}`;
+    return m.kind === 'IMAGE'
+      ? `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="Photo of notes"></a>`
+      : `<audio controls preload="none" src="${url}"></audio>`;
+  }).join('')}</div>`;
+}
+
+function renderSegment(s) {
+  const from = s.source.startsWith('IMAGE') ? 'Photo' : s.source.startsWith('AUDIO') ? 'Audio' : 'Typed';
+  const at = s.startSec != null && from === 'Audio' ? ' ' + fmtSecs(s.startSec) : '';
+  const showSpeaker = s.source.startsWith('AUDIO') && currentDetail.capture.audioMode === 'RECORDING';
+  const spk = showSpeaker
+    ? `<span class="badge ${s.speaker === 'CLIENT' ? 'b-purple' : s.speaker === 'RM' ? 'b-blue' : 'b-gray'} ${s.speakerInferred ? 'speaker-inferred' : ''}" title="${s.speakerInferred ? 'Speaker inferred from content' : ''}">${s.speaker === 'CLIENT' ? 'Client' : s.speaker === 'RM' ? 'RM' : '?'}${s.speakerInferred ? '*' : ''}</span>` : '';
+  return `<div class="seg ${s.lowConfidence ? 'unclear' : ''}" id="seg-${s.seq}">
+    <div class="n">#${s.seq}</div>
+    <div><div class="meta"><span class="badge b-gray">${from}${at}</span>${spk}${s.lowConfidence ? '<span class="badge b-amber">Hard to read</span>' : ''}</div>${esc(s.text)}</div>
+  </div>`;
+}
+
+function renderItem(i) {
+  const isSummary = i.category === 'SUMMARY';
+  const cls = i.decision === 'PENDING' ? 'pending' : i.decision === 'REJECTED' ? 'rejected' : '';
+  const flags = i.flags.map(f => `<div class="flag ${f.startsWith('Compliance') ? 'compliance' : ''}">${esc(f)}</div>`).join('')
+    + i.notes.map(n => `<div class="flag note">ℹ️ ${esc(n)}</div>`).join('');
+  const conf = i.confidence !== 'high' ? `<span class="badge ${i.confidence === 'low' ? 'b-red' : 'b-gray'}">${esc(i.confidence)} confidence</span>` : '';
+  const owner = i.category === 'PROMISE' ? `
+      <select data-field="owner" title="Who committed">
+        ${['RM', 'CLIENT', 'UNKNOWN'].map(o => `<option value="${o}" ${o === i.owner ? 'selected' : ''}>${o === 'RM' ? 'RM owns' : o === 'CLIENT' ? 'Client owns' : 'Owner?'}</option>`).join('')}
+      </select>` : '';
+  const dateRow = (i.datePhrase || i.category === 'PROMISE' || i.category === 'NEXT_MEETING') ? `
+      <div class="kv">📅 ${i.datePhrase ? `<span class="phrase">“${esc(i.datePhrase)}”</span> →` : 'Due'}
+        <input type="date" data-field="resolvedDate" value="${i.resolvedDate || ''}"></div>` : '';
+  const productRow = i.productMention ? `
+      <div class="kv">🏦 <span class="phrase">“${esc(i.productMention)}”</span> →
+        ${i.resolvedLabel ? `<span class="chip ${i.resolvedRef ? '' : 'muted'}" title="${esc(i.resolvedRef || '')}">${esc(i.resolvedLabel)}</span>` : '<span class="chip muted">not matched</span>'}</div>` : '';
+  const sources = i.sources.length
+    ? `<div class="src-chips">Source ${i.sources.map(n => `<button type="button" class="src-chip" data-seq="${n}">#${n}</button>`).join('')}</div>`
+    : '<div class="src-chips">No traceable source</div>';
+  return `
+  <div class="item ${cls}" data-id="${i.id}">
+    <div class="item-head">
+      ${isSummary ? '<span class="badge b-blue">Summary</span>' : ''}
+      ${i.complianceFlag ? '<span class="badge b-purple">Compliance</span>' : ''}
+      ${conf}
+      ${i.edited ? '<span class="badge b-gray">Edited</span>' : ''}
+      <span class="spacer"></span>
+      ${owner}
+      ${isSummary ? '' : `<div class="decide">
+        <button type="button" class="keep ${i.decision === 'ACCEPTED' ? 'on' : ''}" data-decision="ACCEPTED">Keep</button>
+        <button type="button" class="drop ${i.decision === 'REJECTED' ? 'on' : ''}" data-decision="REJECTED">Drop</button></div>`}
+    </div>
+    <textarea data-field="text" rows="${isSummary ? 3 : 2}">${esc(i.text)}</textarea>
+    ${dateRow}${productRow}
+    ${flags ? `<div class="flags">${flags}</div>` : ''}
+    ${sources}
+  </div>`;
+}
+
+function wireReview() {
+  document.querySelectorAll('.item').forEach(card => {
+    const id = Number(card.dataset.id);
+    card.querySelector('textarea').addEventListener('change', e => saveItem(id, { text: e.target.value }));
+    const owner = card.querySelector('select[data-field=owner]');
+    if (owner) owner.addEventListener('change', e => saveItem(id, { owner: e.target.value }));
+    const date = card.querySelector('input[data-field=resolvedDate]');
+    if (date) date.addEventListener('change', e => saveItem(id, { resolvedDate: e.target.value }));
+    card.querySelectorAll('.decide button').forEach(b => b.addEventListener('click', () => saveItem(id, { decision: b.dataset.decision }, true)));
+    card.querySelectorAll('.src-chip').forEach(b => b.addEventListener('click', () => flashSegment(b.dataset.seq)));
+  });
+  document.getElementById('approve').addEventListener('click', approve);
+  document.getElementById('reject').addEventListener('click', reject);
+  const w = document.getElementById('withdraw');
+  if (w) w.addEventListener('click', withdraw);
+}
+
+async function saveItem(id, patch, rerender) {
+  try {
+    const updated = await api('PUT', `/captures/${currentId}/items/${id}`, patch);
+    const idx = currentDetail.items.findIndex(i => i.id === id);
+    currentDetail.items[idx] = updated;
+    if (rerender) render();
+    else {
+      const pending = currentDetail.items.filter(i => i.decision === 'PENDING').length;
+      document.getElementById('pending-status').innerHTML = pendingText(pending);
+    }
+  } catch (e) { toast(e.message, true); }
+}
+
+function flashSegment(seq) {
+  const el = document.getElementById('seg-' + seq);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 1400);
+}
+
+async function approve() {
+  const btn = document.getElementById('approve');
+  btn.disabled = true;
+  try {
+    await api('POST', `/captures/${currentId}/approve`);
+    currentDetail.capture.decisionPending = true;
+    render();
+    follow(currentId);
+  } catch (e) { toast(e.message, true); btn.disabled = false; }
+}
+
+async function reject() {
+  const reason = prompt('Why are you rejecting this draft? (optional)');
+  if (reason === null) return;
+  try {
+    await api('POST', `/captures/${currentId}/reject`, { reason });
+    currentDetail.capture.decisionPending = true;
+    render();
+    follow(currentId);
+  } catch (e) { toast(e.message, true); }
+}
+
+async function withdraw() {
+  if (!confirm('The client withdrew consent?\n\nThis deletes the recording, its transcript and the draft — and the CRM entry if it was already saved. This cannot be undone.')) return;
+  try {
+    await api('POST', `/captures/${currentId}/withdraw-consent`);
+    toast('Consent withdrawn — deleting');
+    currentDetail.capture.decisionPending = true;
+    follow(currentId);
+    setTimeout(refreshDetail, 1500);
+  } catch (e) { toast(e.message, true); }
+}
+
+// ── Committed / read-only ──────────────────────────────────────────────────
+function renderCommitted(d) {
+  return `
+  <div class="notice ok">✅ <div><b>Saved to CRM</b> as interaction #${d.interactionId ?? '—'} by ${esc(d.decidedBy || '')}.
+    The next pre-meeting brief will use these notes and track the promises below.
+    <br><a href="/?client=${encodeURIComponent(d.capture.clientId)}">Generate ${esc(d.capture.clientName)}'s brief →</a></div></div>
+  ${d.consent && !d.consent.withdrawnAt ? '<div><button class="btn danger small" id="withdraw-after">Client withdrew consent</button></div>' : ''}
+  <div class="card"><div class="card-title">🤝 Open promises for ${esc(d.capture.clientName)}</div><div id="promises"><div class="empty" style="padding:20px">Loading…</div></div></div>
+  ${renderReadOnly(d)}`;
+}
+
+function renderReadOnly(d) {
+  const kept = d.items.filter(i => i.decision === 'ACCEPTED');
+  if (!kept.length) return '';
+  return `<div class="card"><div class="card-title">📝 ${d.capture.state === 'COMMITTED' ? 'What was saved' : 'Draft'}</div><div class="card-body">
+    ${kept.map(i => `<div style="font-size:14px;line-height:1.5"><span class="badge b-gray">${i.category === 'SUMMARY' ? 'Summary' : CATEGORY[i.category][1]}</span>
+      ${esc(i.text)}${i.resolvedDate ? ` <span class="chip">${esc(i.resolvedDate)}</span>` : ''}${i.resolvedRef ? ` <span class="chip">${esc(i.resolvedLabel)}</span>` : ''}</div>`).join('')}
+  </div></div>`;
+}
+
+async function loadPromises(clientId) {
+  const w = document.getElementById('withdraw-after');
+  if (w) w.addEventListener('click', withdraw);
+  let rows = [];
+  try { rows = await api('GET', `/clients/${encodeURIComponent(clientId)}/promises`); } catch (e) { return; }
+  const box = document.getElementById('promises');
+  if (!box) return;
+  if (!rows.length) { box.innerHTML = '<div class="empty" style="padding:20px">No open promises.</div>'; return; }
+  const t = today();
+  box.innerHTML = rows.map(p => {
+    const overdue = p.dueDate && p.dueDate < t;
+    return `<div class="promise-row">
+      <span class="badge ${p.owner === 'CLIENT' ? 'b-purple' : 'b-blue'}">${p.owner === 'CLIENT' ? 'Client' : 'RM'}</span>
+      <span class="t">${esc(p.text)}</span>
+      ${p.dueDate ? `<span class="badge ${overdue ? 'b-red' : 'b-gray'}">${overdue ? 'Overdue ' : 'Due '}${esc(p.dueDate)}</span>` : ''}
+      <button class="btn secondary small" data-id="${p.id}">Mark done</button></div>`;
+  }).join('');
+  box.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', async () => {
+    try { await api('POST', `/promises/${b.dataset.id}/status`, { status: 'DONE' }); loadPromises(clientId); }
+    catch (e) { toast(e.message, true); }
+  }));
+}
+
+function renderAudit(d) {
+  if (!d.audit.length) return '';
+  return `<details class="card audit"><summary>Audit trail (${d.audit.length})</summary>
+    ${d.audit.map(a => `<div class="audit-row"><span>${esc(fmtTime(a.at))}</span><span>${esc(a.actor)}</span><span>${esc(a.action)}${a.detail ? ' · ' + esc(a.detail) : ''}</span></div>`).join('')}
+  </details>`;
+}
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+function stateBadge(state) {
+  return `<span class="badge ${STATE_BADGE[state] || 'b-blue'}">${esc(STATE_LABEL[state] || state)}</span>`;
+}
+function modeLabel(m) { return m === 'RECORDING' ? 'Meeting recording' : m === 'VOICE_MEMO' ? 'Voice memo' : 'Notes'; }
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function fmtTime(iso) { return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); }
+function fmtSecs(s) { const m = Math.floor(s / 60); return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`; }
+function toast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err ? ' err' : '');
+  t.style.display = 'block';
+  clearTimeout(t._h);
+  t._h = setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>

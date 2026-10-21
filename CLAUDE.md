@@ -33,6 +33,8 @@ PLAID_ENV=sandbox
 
 `SPRING_DATASOURCE_URL`, `SPRING_DATA_REDIS_HOST` are injected by `docker-compose.yml` and must not be set in `.env`.
 
+`MEDIA_ENCRYPTION_KEY` (base64 AES-256, `openssl rand -base64 32`) is also required — compose refuses to start without it. Changing it makes previously stored capture media unreadable.
+
 ## Key endpoints
 
 | Method | Path | Purpose |
@@ -43,6 +45,15 @@ PLAID_ENV=sandbox
 | GET | `/debug/tools/{clientId}/{tool}` | Run a single tool and inspect raw output |
 | GET | `/debug/delta/{clientId}` | Run deterministic delta and inspect ChangeReport |
 | GET | `/health` | Liveness check |
+| POST | `/captures` | Multipart upload (notes / images / audio + `audioMode`, consent) — starts a capture workflow |
+| GET | `/captures`, `/captures/{id}` | List / full draft (segments, items, flags, audit) |
+| GET | `/captures/{id}/stream` | SSE state changes until review is needed or a final state |
+| PUT | `/captures/{id}/items/{itemId}` | RM edits text / owner / date / Keep-Drop decision |
+| POST | `/captures/{id}/approve` · `/reject` · `/withdraw-consent` | Sent to the workflow as Temporal signals |
+| GET/PUT | `/policy/recording` · `/admin/recording-policy` | Compliance toggle for meeting recording (off by default) |
+| GET/POST | `/clients/{id}/promises` · `/promises/{id}/status` | Tracked promises; mark DONE / CANCELLED |
+
+UI: `/` (brief) and `/capture.html` (capture + review). Temporal Web UI: http://localhost:8233.
 
 ### Hero demo reset
 
@@ -71,6 +82,21 @@ GET /briefs/{clientId}/stream
         └── 4. STREAM  — BriefController emits SSE events for each phase transition
 ```
 
+### Post-meeting capture (Temporal workflow per capture, `capture/`)
+
+```
+POST /captures → CaptureService (validate, encrypt media, consent) → CaptureWorkflow "capture-{id}"
+  normalize      notes → lines; photos → Claude vision; audio → TranscriptionProvider (Whisper)
+  labelSpeakers  recordings only — Claude labels RM/CLIENT, every label marked speakerInferred
+  extract        one Claude call → summary + items citing segment seqs (dates/products copied verbatim)
+  resolve        Java: DateResolver, ProductResolver, flags (block approval) vs notes (informational)
+  await review   signals approve / reject / withdrawConsent; reminder timer
+  commit         Interaction + client_promise rows → feeds DeltaService.openPromises → brief
+  retention      timer, then raw media deleted; consent withdrawal purges everything derived
+```
+
+Only capture IDs cross into Temporal; content stays in Postgres and the encrypted media store. Activities are idempotent (Temporal retries them). `TRANSCRIPTION_PROVIDER=openai` + `OPENAI_API_KEY` swaps Whisper for OpenAI.
+
 ## Package layout
 
 ```
@@ -81,8 +107,15 @@ com.demo.rmbrief/
   llm/         SynthesisService (final Claude call + citation validation), BriefSchema record
   plaid/       PlaidConfig (SDK wiring), PlaidBootstrapService (public_token exchange, seed)
   crm/         JPA entities (Client, Interaction, SyntheticProduct) + repositories
-  web/         BriefController (SSE), ClientController, AdminController, ToolDebugController
-  config/      FlywayConfig (explicit bean — required for Spring Boot 4), RedisConfig
+  capture/     Capture entities + repos, CaptureService (API ops), NormalizeService, CaptureLifecycleService
+    workflow/  CaptureWorkflow(+Impl), CaptureActivities(+Impl)
+    transcribe/ TranscriptionProvider (LocalWhisper / OpenAI), ImageTranscriber (Claude vision)
+    extract/   CaptureLlm (structured Claude calls), ExtractionService, SpeakerLabeler
+    resolve/   DateResolver, ProductResolver, ResolveService — pure Java
+    media/     MediaStore (AES-GCM encrypted files)
+  web/         BriefController (SSE), ClientController, AdminController, ToolDebugController,
+               CaptureController (SSE), PolicyController
+  config/      FlywayConfig (explicit bean — required for Spring Boot 4), RedisConfig, TemporalConfig
 ```
 
 Static UI is a single file at `brief-api/src/main/resources/static/index.html` (no build step).
@@ -93,6 +126,10 @@ Static UI is a single file at `brief-api/src/main/resources/static/index.html` (
 - **Deltas are deterministic Java.** `DeltaService` computes `ChangeReport`; the LLM is never asked to compute numbers or compare dates.
 - **Citation validation.** `SynthesisService.validateCitations()` strips any citation ID that does not resolve to an `accountId`, `transactionId`, or `productType` from the `ChangeReport` before the brief is returned.
 - **No invented numbers.** The synthesis prompt forbids Claude from referencing data not present in the supplied `ChangeReport` + CRM context JSON.
+- **Nothing reaches the CRM without RM approval.** Captures commit only via the approve signal; flagged items must be decided first.
+- **Capture dates/products are resolved in Java.** Claude copies phrases verbatim; `DateResolver`/`ProductResolver` interpret them. Extracted citations to non-existent segments are dropped and the item flagged.
+- **Recording requires policy + consent.** `POST /captures` with `audioMode=RECORDING` is rejected unless the recording policy is on and consent is supplied.
+- **Never log note/transcript content** — log IDs and counts only; `audit_log` stores actions, not content.
 
 ## Known Plaid sandbox quirks
 
@@ -108,6 +145,16 @@ Static UI is a single file at `brief-api/src/main/resources/static/index.html` (
 - **`ObjectMapper`** is not auto-wired in Spring Boot 4 — use `private static final ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules()`.
 - **`Map.of()` rejects null values** — use `Map<String, Object> m = new LinkedHashMap<>()` with explicit type (not `var`) when mapping Plaid response fields that may be null.
 - **`anthropic-java` 2.41.0**: `AnthropicOkHttpClient.fromEnv()` reads `ANTHROPIC_API_KEY`. For multi-turn tool-use loops, use `params.toBuilder().addMessage(response).addUserMessageOfBlockParams(toolResults).build()` to extend the conversation. `StopReason` comparison: use `"tool_use".equals(response.stopReason().map(Object::toString).orElse(""))`.
+
+- **Error messages**: Boot 4 uses `spring.web.error.include-message` (not `server.error.*`) to put `ResponseStatusException` reasons in the response body.
+
+## Capture gotchas
+
+- **JDK `HttpClient` must use HTTP/1.1** for the Whisper container — the default h2c upgrade makes uvicorn drop multipart bodies (HTTP 422).
+- **Temporal dev server image runs as uid 1000** — its volume is mounted at `/home/temporal` so the SQLite file is writable.
+- **Plaid sandbox items expire** (`ITEM_LOGIN_REQUIRED`) — re-seed with `force:true`. Capture still works; product matching falls back to CRM products.
+- Shorten timers for demos: `CAPTURE_REVIEW_REMINDER`, `CAPTURE_RETENTION_NOTES`, `CAPTURE_RETENTION_RECORDING` (e.g. `45s`).
+- Capture Claude calls use `CAPTURE_MODEL` (default `claude-opus-5-5`) with structured outputs and server-side fallbacks; the brief synthesis still uses `claude-sonnet-4-6`.
 
 ## Configurable thresholds (application.yml)
 
