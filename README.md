@@ -65,10 +65,11 @@ docker compose up --build        # ~2–3 min first build; ~30s to healthy after
 # 3. Health check
 curl http://localhost:8080/health      # {"status":"UP"}
 
-# 4. Seed the three demo clients' Plaid items (one-time, per fresh database)
-curl -X POST http://localhost:8080/admin/seed-client -H "Content-Type: application/json" -d '{"clientId":"client_001","persona":"user_good"}'
-curl -X POST http://localhost:8080/admin/seed-client -H "Content-Type: application/json" -d '{"clientId":"client_002","persona":"user_good"}'
-curl -X POST http://localhost:8080/admin/seed-client -H "Content-Type: application/json" -d '{"clientId":"client_003","persona":"user_good"}'
+# 4. Seed the four demo clients' Plaid items (one-time, per fresh database)
+curl -X POST http://localhost:8080/admin/seed-client -H "Content-Type: application/json" -d '{"clientId":"client_001","persona":"user_good","plantLargeOutflow":false,"force":true}'
+curl -X POST http://localhost:8080/admin/seed-client -H "Content-Type: application/json" -d '{"clientId":"client_002","persona":"user_good","plantLargeOutflow":false,"force":true}'
+curl -X POST http://localhost:8080/admin/seed-client -H "Content-Type: application/json" -d '{"clientId":"client_003","persona":"user_good","plantLargeOutflow":false,"force":true}'
+curl -X POST http://localhost:8080/admin/seed-client -H "Content-Type: application/json" -d '{"clientId":"client_004","persona":"user_good","plantLargeOutflow":false,"force":true}'
 ```
 
 Then open **http://localhost:8080** in a browser, pick **Robert Harrington** (the hero client),
@@ -136,6 +137,7 @@ http://localhost:8233.
 | `client_001` | Margaret Chen | Private | Clean / baseline |
 | `client_002` | **Robert Harrington** | Mass Affluent | **Hero** — CD maturing in ~3 weeks, large recurring outflow |
 | `client_003` | Elena Vasquez | Mass Affluent | Dormant |
+| `client_004` | David Okafor | Private | Retirement planning — CD maturing 2026-11-30 |
 
 ## Stack
 
