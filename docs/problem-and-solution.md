@@ -70,6 +70,7 @@ Client ID
 This is what lets us promise the three things a bank needs: **no invented numbers** (the
 math is code, the prompt is constrained), **auditability** (clickable citations validated in
 code), and **cost control** (one right-sized model call per brief, not a reasoning loop).
+Rendered flow diagrams for the brief, chat and capture: [`architecture.md`](architecture.md).
 
 ### Closing the loop: post-meeting capture
 
@@ -152,6 +153,12 @@ for the model breakdown.
   per feature.
 - **Whisper (self-hosted)** — speech-to-text for voice memos and recordings, so audio stays on
   the bank's network.
+
+## Limitations and next steps
+
+This is a working proof of concept on synthetic data; known limitations (no authentication,
+sandbox data, inferred speakers, no automated tests, …) and a prioritized list of next steps are
+in [`limitations-and-next-steps.md`](limitations-and-next-steps.md).
 
 > AI assistance disclosure: this repository (code, this document, the CBA, and the README)
 > was produced with Claude Code. All financial data is **synthetic / Plaid Sandbox** — no

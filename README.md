@@ -18,11 +18,23 @@ Anthropic API (directly, or through a corporate AI gateway).
 > Secondary — *Advance Agent-Based AI Capabilities* · *Operationalize GenAI (LLMOps & Quality)*.
 >
 > Full write-up: [`docs/problem-and-solution.md`](docs/problem-and-solution.md) ·
+> architecture diagrams: [`docs/architecture.md`](docs/architecture.md) ·
+> limitations & next steps: [`docs/limitations-and-next-steps.md`](docs/limitations-and-next-steps.md) ·
 > cost-benefit: [`cba/cost-benefit-analysis.md`](cba/cost-benefit-analysis.md) ·
 > models: [`docs/model-usage.md`](docs/model-usage.md) ·
 > prompts: [`prompts/`](prompts/).
 
 ![Pre-meeting brief example](docs/screenshots/brief-example.png)
+
+## The problem
+
+Before each of 6–8 daily client meetings, a Relationship Manager stitches together the client's
+picture by hand: core-banking screens, CRM notes from the last meeting, recent transactions,
+holdings, and whatever they promised last time. It's slow, inconsistent and easy to get wrong — a
+missed CD maturity or an unexplained large outflow is a missed conversation. After the meeting,
+notes and promises have to be typed into the CRM, and commitments get dropped. Simply asking an
+LLM to "summarize the client" isn't acceptable in a bank: invented numbers, no audit trail, and
+cost at scale. Full statement: [`docs/problem-and-solution.md`](docs/problem-and-solution.md).
 
 ## The design that makes it bank-grade
 
@@ -43,7 +55,25 @@ GET /briefs/{clientId}/stream  (Server-Sent Events)
 This gives three guarantees a bank needs: **no invented numbers**, **auditable citations**, and
 **one right-sized model call per brief** (cost control). The same rule carries into chat (totals
 and comparisons come from Java tools) and capture (dates and products are resolved in Java, and
-nothing reaches the CRM without the RM's approval).
+nothing reaches the CRM without the RM's approval). Flow diagrams for all three features:
+[`docs/architecture.md`](docs/architecture.md).
+
+## Models and rationale
+
+| Feature | Exact model ID (default) | Setting | Calls |
+|---|---|---|---|
+| Pre-meeting brief synthesis | `claude-sonnet-5` | `BRIEF_MODEL` | 1 per brief |
+| Brief chat | `claude-sonnet-5` | `CHAT_MODEL` | 1–3 rounds per question |
+| Capture: photo transcription, speaker labels, extraction | `claude-sonnet-5` | `CAPTURE_MODEL` | 1 extraction + 1 per photo + 1 per recording |
+| Gather planning (agentic mode only) | `claude-sonnet-5` | `AGENT_MODEL` | Short tool loop |
+| Speech-to-text | Whisper `base.en` (self-hosted) | `TRANSCRIPTION_PROVIDER` | Not a Claude call |
+
+**Why Sonnet 5:** it's strong enough for grounded financial prose, structured extraction and tool
+use at a fraction of frontier-model cost ($2 / $10 per 1M input/output tokens; ~4¢ per brief,
+measured). Correctness doesn't depend on model size — numbers, dates and citation checks are
+Java — so each feature can move to a cheaper or stronger model by changing one setting. Speech-to-
+text runs self-hosted so client audio stays on the bank's network. Details:
+[`docs/model-usage.md`](docs/model-usage.md); exact prompts: [`prompts/`](prompts/).
 
 ## Quick start
 
@@ -103,15 +133,31 @@ flagged items need **Keep** or **Drop**. **Approve & save to CRM** writes the in
 tracked promises, which the next brief picks up. Meeting recording is off until the
 **Compliance setting** is switched on, and needs the client's consent before the recorder unlocks.
 
-### Hero demo reset
+### Replay the demo (~5 minutes)
 
-Re-seed the hero client to a clean state before a demo:
+1. **Reset the hero client** (fresh Plaid data):
+   ```bash
+   curl -X POST http://localhost:8080/admin/seed-client \
+     -H "Content-Type: application/json" \
+     -d '{"clientId":"client_002","persona":"user_good","plantLargeOutflow":false,"force":true}'
+   ```
+2. **Brief** — open http://localhost:8080, pick **Robert Harrington**, click **Generate Brief**.
+   Watch the agent steps stream; click a citation chip to see the underlying record. Facts like
+   the matured $150,000 CD come from the deterministic ChangeReport — inspect it at
+   http://localhost:8080/debug/delta/client_002.
+3. **Chat** — click **💬 Ask about this brief**, ask *"How much went to United Airlines, by
+   month?"* (totals computed by a Java tool), then *"Add a watch-out about …"* and click **Apply** —
+   the version bar shows v2, and v1 is still viewable.
+4. **Capture** — open http://localhost:8080/capture.html, pick the same client, paste notes such
+   as *"Client asked about HELOC rates. I will send CD renewal options by next Friday."*, click
+   **Process capture**. Review the draft (note "next Friday" resolved to a date and flagged as
+   ambiguous), Keep/Drop flagged items, **Approve & save to CRM**.
+5. **Close the loop** — click **Generate … brief →**: the new meeting and the tracked promise (with
+   its due date) now appear in the brief. The capture's workflow is visible at
+   http://localhost:8233.
 
-```bash
-curl -X POST http://localhost:8080/admin/seed-client \
-  -H "Content-Type: application/json" \
-  -d '{"clientId":"client_002","persona":"user_good","plantLargeOutflow":false,"force":true}'
-```
+Each run creates new captures, promises and brief versions; re-seeding Plaid doesn't remove them.
+For a completely fresh start, `docker compose down -v` (deletes all data) and redo the Quick start.
 
 ## Demo clients (synthetic)
 
@@ -290,8 +336,9 @@ model breakdown.
 ```
 ├── README.md                  # this file
 ├── CLAUDE.md                  # guidance for AI coding assistants working on this repo
-├── brief-api/                 # Spring Boot service (code, static UI, Flyway migrations)
-├── docs/                      # problem & solution write-up, model usage, slides, screenshots
+├── brief-api/                 # all application code (src/main/java), static UI, Flyway migrations
+├── docs/                      # problem & solution, architecture diagrams, limitations & next steps,
+│                              #   model usage, slides, screenshots
 ├── cba/                       # cost-benefit analysis
 ├── prompts/                   # exact runtime prompts, tool schemas, model config
 ├── docker-compose.yml
