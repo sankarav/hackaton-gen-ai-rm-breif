@@ -1,6 +1,7 @@
 # RM Pre-Meeting Intelligence Brief
 
-> 🎥 **Demo recording:** [youtube.com/watch?v=jKShU4F57ng](https://www.youtube.com/watch?v=jKShU4F57ng)
+[//]: # ()
+[//]: # (> 🎥 **Demo recording:** [youtube.com/watch?v=jKShU4F57ng]&#40;https://www.youtube.com/watch?v=jKShU4F57ng&#41;)
 
 An **agentic AI service for bank Relationship Managers**, grounded in **Plaid Sandbox** data plus
 a synthetic PostgreSQL CRM:
@@ -24,7 +25,8 @@ Anthropic API (directly, or through a corporate AI gateway).
 > models: [`docs/model-usage.md`](docs/model-usage.md) ·
 > prompts: [`prompts/`](prompts/).
 
-![Pre-meeting brief example](docs/screenshots/brief-example.png)
+![Meeting Notes capturing system](docs/screenshots/meeting-notes.png)
+![Pre-meeting brief example with chat](docs/screenshots/brief-example-with-chat.png)
 
 ## The problem
 
