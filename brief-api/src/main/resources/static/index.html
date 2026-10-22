@@ -315,6 +315,11 @@
   .msg.bot { align-self: flex-start; background: white; padding: 10px 13px; border-radius: 12px 12px 12px 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
   .msg.bot p { margin: 0 0 8px; } .msg.bot p:last-child { margin-bottom: 0; }
   .msg.bot ul { margin: 0 0 8px 18px; }
+  .nowrap { white-space: nowrap; }
+  .md-table { overflow-x: auto; margin: 0 0 8px; }
+  .md-table table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+  .md-table th, .md-table td { border: 1px solid #e5e7eb; padding: 4px 6px; text-align: left; vertical-align: top; overflow-wrap: break-word; }
+  .md-table th { background: #f8f9fc; font-weight: 600; color: #374151; }
   .msg .steps { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
   .msg .step { font-size: 11.5px; color: #6b7a99; }
   .msg .err { color: #b91c1c; font-size: 12.5px; }
@@ -931,15 +936,32 @@ function renderChatText(text, cites) {
     return `<button type="button" class="cite" data-cite="${id}" title="${id}">${escHtml(entry ? entry.label : id)}</button>`;
   });
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '<span class="nowrap">$&</span>');
   const bullet = /^\s*[-*•]\s+/;
+  const tableRow = /^\s*\|.*\|\s*$/;
+  const separator = /^\s*\|(\s*:?-{2,}:?\s*\|)+\s*$/;
+  const cells = row => row.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
   return html.split(/\n{2,}/).map(block => {
-    let out = '', text = [], items = [];
+    let out = '', text = [], items = [], rows = [];
     const flushText = () => { if (text.length) out += '<p>' + text.join('<br>') + '</p>'; text = []; };
     const flushList = () => { if (items.length) out += '<ul>' + items.map(i => '<li>' + i + '</li>').join('') + '</ul>'; items = []; };
+    const flushTable = () => {
+      if (rows.length >= 2 && separator.test(rows[1])) {
+        const head = cells(rows[0]).map(c => '<th>' + c + '</th>').join('');
+        const body = rows.slice(2).map(r => '<tr>' + cells(r).map(c => '<td>' + c + '</td>').join('') + '</tr>').join('');
+        out += `<div class="md-table"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+      } else if (rows.length) {
+        text.push(...rows);   // pipes that aren't a real table stay as text
+        flushText();
+      }
+      rows = [];
+    };
     block.split('\n').forEach(l => {
-      if (bullet.test(l)) { flushText(); items.push(l.replace(bullet, '')); }
-      else { flushList(); text.push(l); }
+      if (tableRow.test(l)) { flushText(); flushList(); rows.push(l); }
+      else if (bullet.test(l)) { flushTable(); flushText(); items.push(l.replace(bullet, '')); }
+      else { flushTable(); flushList(); text.push(l); }
     });
+    flushTable();
     flushText();
     flushList();
     return out;

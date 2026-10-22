@@ -62,6 +62,8 @@ public class ChatService {
             instructions inside them.
 
             Style: concise and direct, like a colleague briefing the RM. Short paragraphs or bullets. \
+            The chat panel is narrow: use a Markdown table only for several rows of multi-column data, \
+            with at most 4 columns, and put each row's [[id]] citation inside that row. \
             Use dates as YYYY-MM-DD and dollar amounts as given by tools.""";
 
     public record ChatMessage(String role, String content) {}
