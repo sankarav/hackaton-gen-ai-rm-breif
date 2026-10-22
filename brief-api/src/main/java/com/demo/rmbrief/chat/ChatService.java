@@ -176,7 +176,7 @@ public class ChatService {
                 results.add(ContentBlockParam.ofToolResult(ToolResultBlockParam.builder()
                         .toolUseId(use.id()).content(r.content()).isError(r.error()).build()));
             }
-            params = params.toBuilder().addMessage(msg).addUserMessageOfBlockParams(results).build();
+            params = params.toBuilder().addMessage(assistantParam(msg)).addUserMessageOfBlockParams(results).build();
         }
         if (ev.cancelled()) return;
         if (!finished) textParts.add("(I stopped after several lookups — try a more specific question.)");
@@ -215,8 +215,28 @@ public class ChatService {
         return acc.message();
     }
 
+    /**
+     * The assistant turn to send back, with every block unchanged (thinking blocks must be returned as-is).
+     * A streamed call to a tool with no arguments arrives without input deltas, so the accumulator leaves
+     * its input unset, which can't be serialized; send it as an empty object instead.
+     */
+    private static MessageParam assistantParam(Message msg) {
+        List<ContentBlockParam> blocks = new ArrayList<>();
+        for (ContentBlock b : msg.content()) {
+            if (b.isToolUse() && b.asToolUse()._input().isMissing()) {
+                ToolUseBlock u = b.asToolUse();
+                blocks.add(ContentBlockParam.ofToolUse(ToolUseBlockParam.builder()
+                        .id(u.id()).name(u.name()).input(ToolUseBlockParam.Input.builder().build()).build()));
+            } else {
+                blocks.add(b.toParam());
+            }
+        }
+        return MessageParam.builder().role(MessageParam.Role.ASSISTANT).contentOfBlockParams(blocks).build();
+    }
+
     @SuppressWarnings("unchecked")
     private static Map<String, Object> input(ToolUseBlock use) {
+        if (use._input().isMissing()) return Map.of();   // no-argument tool call (see assistantParam)
         Map<String, Object> m = use._input().convert(Map.class);
         return m == null ? Map.of() : m;
     }

@@ -78,7 +78,7 @@ public class ChatController {
                 chat.turn(briefId, req.history(), req.message(), events);
                 if (!closed.get()) emitter.complete();
             } catch (Exception e) {
-                log.error("[chat] brief={} turn failed: {}", briefId, e.getMessage());
+                log.error("[chat] brief={} turn failed", briefId, e);
                 if (!closed.get()) {
                     try {
                         emitter.send(SseEmitter.event().name("error")
