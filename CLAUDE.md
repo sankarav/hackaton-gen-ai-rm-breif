@@ -22,16 +22,19 @@ There are **no unit tests** in this project — correctness is verified by runni
 
 ## Environment
 
-Copy `.env.example` → `.env` and fill in three secrets before starting:
+Copy `.env.example` → `.env` and fill in before starting:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 PLAID_CLIENT_ID=...
 PLAID_SECRET=...
 PLAID_ENV=sandbox
+MEDIA_ENCRYPTION_KEY=...   # openssl rand -base64 32
 ```
 
-`SPRING_DATASOURCE_URL`, `SPRING_DATA_REDIS_HOST` are injected by `docker-compose.yml` and must not be set in `.env`.
+`SPRING_DATASOURCE_URL`, `SPRING_DATA_REDIS_HOST`, `TEMPORAL_TARGET`, `WHISPER_URL`, `MEDIA_ROOT` are injected by `docker-compose.yml` and must not be set in `.env`. After editing `.env`, run `docker compose up -d brief-api` — `restart` does not re-read it.
+
+On a fresh database, link each demo client to Plaid with the seed calls in the README (all four fields — `clientId`, `persona`, `plantLargeOutflow`, `force` — are required; a missing boolean returns 400).
 
 **Corporate AI gateway:** set `SPRING_PROFILES_ACTIVE=gateway` plus `ANTHROPIC_GATEWAY_URL`, `ANTHROPIC_GATEWAY_API_KEY`, `ANTHROPIC_GATEWAY_KEY_HEADER` in `.env`. The `gateway` profile (bottom of `application.yml`) sends the key only in that header, never as `x-api-key`. All Claude calls share the one `AnthropicClient` bean from `AnthropicConfig` — never call `AnthropicOkHttpClient.fromEnv()` directly.
 
@@ -54,7 +57,8 @@ PLAID_ENV=sandbox
 | POST | `/captures/{id}/approve` · `/reject` · `/withdraw-consent` | Sent to the workflow as Temporal signals |
 | GET/PUT | `/policy/recording` · `/admin/recording-policy` | Compliance toggle for meeting recording (off by default) |
 | GET/POST | `/clients/{id}/promises` · `/promises/{id}/status` | Tracked promises; mark DONE / CANCELLED |
-
+| GET | `/captures/{id}/media/{mediaId}` | Decrypted photo/audio for review (410 after retention) |
+| GET | `/briefs/saved?clientId=` | A client's saved briefs, newest first (UI reopens the latest) |
 | GET | `/briefs/saved/{briefId}?version=` | Saved brief version + ChangeReport + citation details + version history |
 | POST | `/briefs/saved/{briefId}/chat` | Chat turn, SSE over POST (`step`, `delta`, `proposal`, `answer`). Body: `{history, message}` |
 | POST | `/briefs/saved/{briefId}/edits` | Apply an RM-approved proposal `{baseVersion, edit}` → new version (409 if stale) |
@@ -71,7 +75,7 @@ curl -X POST http://localhost:8080/admin/seed-client \
 
 ## Architecture
 
-The pipeline runs in one HTTP request (SSE stream) through four sequential phases:
+The brief pipeline runs in one HTTP request (SSE stream) through these sequential phases:
 
 ```
 GET /briefs/{clientId}/stream
@@ -85,7 +89,8 @@ GET /briefs/{clientId}/stream
         │     ├── Single Claude call (`app.brief.model`, default claude-sonnet-5) with ChangeReport + CRM context
         │     ├── Citation validator strips any IDs not in the ChangeReport before returning
         │     └── Returns BriefSchema (typed Java record matching spec §8 JSON schema)
-        └── 4. STREAM  — BriefController emits SSE events for each phase transition
+        ├── 4. SAVE    — BriefStore.create() stores it as version 1; SSE `brief_saved` returns the ID
+        └── 5. STREAM  — BriefController emits SSE events for each phase transition
 ```
 
 ### Post-meeting capture (Temporal workflow per capture, `capture/`)
@@ -129,13 +134,16 @@ com.demo.rmbrief/
   config/      FlywayConfig (explicit bean — required for Spring Boot 4), RedisConfig, TemporalConfig
 ```
 
-Static UI is a single file at `brief-api/src/main/resources/static/index.html` (no build step).
+Static UI is two files in `brief-api/src/main/resources/static/` (no build step): `index.html` (brief, saved briefs, versions, chat drawer) and `capture.html` (capture + review). They're baked into the image — rebuild after editing them.
+
+Prompts and tool schemas are mirrored in `prompts/`. After changing a prompt or `ChatTools`, regenerate the mirrors with `prompts/extract-prompts.jsh` (instructions in `prompts/README.md`).
 
 ## Hard constraints — never violate
 
 - **Read-only Plaid.** No write/transfer/payment Plaid scopes or endpoints.
 - **Deltas are deterministic Java.** `DeltaService` computes `ChangeReport`; the LLM is never asked to compute numbers or compare dates.
-- **Citation validation.** `SynthesisService.validateCitations()` strips any citation ID that does not resolve to an `accountId`, `transactionId`, or `productType` from the `ChangeReport` before the brief is returned.
+- **Citation validation.** `SynthesisService.validateCitations()` strips any citation ID not in `ChangeReport.citationIds()` (`accountId`, `transactionId`, `productType`, `promiseId`) before the brief is returned. Chat strips `[[id]]` citations no tool returned; `BriefStore.apply` re-checks edit citations against live Plaid data.
+- **Chat can't change anything on its own.** Brief edits are proposals; only `POST /briefs/saved/{id}/edits` (the RM's Apply) writes a new version. Chat tools are read-only and bound to the brief's client.
 - **No invented numbers.** The synthesis prompt forbids Claude from referencing data not present in the supplied `ChangeReport` + CRM context JSON.
 - **Nothing reaches the CRM without RM approval.** Captures commit only via the approve signal; flagged items must be decided first.
 - **Capture dates/products are resolved in Java.** Claude copies phrases verbatim; `DateResolver`/`ProductResolver` interpret them. Extracted citations to non-existent segments are dropped and the item flagged.
@@ -167,6 +175,17 @@ Static UI is a single file at `brief-api/src/main/resources/static/index.html` (
 - Shorten timers for demos: `CAPTURE_REVIEW_REMINDER`, `CAPTURE_RETENTION_NOTES`, `CAPTURE_RETENTION_RECORDING` (e.g. `45s`).
 - Models are set in `application.yml`, never in code: `BRIEF_MODEL` (brief synthesis), `AGENT_MODEL` (tool planning when `eager-tool-calls=false`), `CHAT_MODEL` (brief chat), `CAPTURE_MODEL` (capture vision, speaker labels, extraction). Newer models think by default and thinking is billed as output, so keep `maxTokens` generous (16000). Every Claude call logs `[llm] <purpose> model= in= out=` for cost tracking.
 
+## Chat gotchas
+
+- **Streamed no-argument tool calls have no input.** `MessageAccumulator` leaves `ToolUseBlock._input()` missing (`JsonMissing`) when a tool with no parameters is called; converting or re-sending it throws "JsonMissing cannot be serialized". `ChatService.input()` and `assistantParam()` treat it as `{}`.
+- **Return thinking blocks unchanged** when continuing a tool loop — rebuild the assistant turn with `ContentBlock.toParam()`, never edit or drop blocks.
+- **Streamed model text is untrusted HTML input.** The chat renderer escapes first, then adds bold, bullets and tables; citation chips use `data-cite` attributes with a delegated click handler, never inline `onclick`.
+
+## Demo data
+
+- New permanent demo clients go in a Flyway migration written to be idempotent (`ON CONFLICT DO NOTHING` / `WHERE NOT EXISTS`), so it also applies where the rows were added by hand — see `V5__seed_client_004.sql`.
+- Ad-hoc rows: use a `psql` heredoc (`<<'SQL'`) with `-v ON_ERROR_STOP=1` and `BEGIN`/`COMMIT` (example in the README).
+
 ## Configurable thresholds (application.yml)
 
 ```yaml
@@ -179,4 +198,10 @@ app:
     model: claude-sonnet-5          # AGENT_MODEL
   brief:
     model: claude-sonnet-5          # BRIEF_MODEL
+  chat:
+    model: claude-sonnet-5          # CHAT_MODEL
+  capture:
+    model: claude-sonnet-5          # CAPTURE_MODEL
+    review-reminder: 48h            # CAPTURE_REVIEW_REMINDER
+    retention: { notes: 30d, recording: 7d }
 ```

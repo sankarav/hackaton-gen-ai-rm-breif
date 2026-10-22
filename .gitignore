@@ -3,3 +3,4 @@ brief-api/target/
 *.class
 *.jar
 data/
+brief-api/cp.txt

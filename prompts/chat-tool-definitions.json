@@ -1,0 +1,185 @@
+{
+  "_comment" : "Tools passed to Claude in brief chat. Built by ChatTools.definitions(). All read-only and bound to the brief's client (no clientId parameter). propose_brief_edit only proposes; the RM applies.",
+  "tools" : [ {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "name" : "get_accounts",
+    "description" : "List the client's accounts with current and available balances."
+  }, {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : {
+        "since" : {
+          "description" : "Start date inclusive, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "until" : {
+          "description" : "End date inclusive, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "direction" : {
+          "description" : "outflow = money out, inflow = money in",
+          "type" : "string",
+          "enum" : [ "outflow", "inflow", "all" ]
+        },
+        "account_id" : {
+          "description" : "Limit to one accountId",
+          "type" : "string"
+        },
+        "merchant_contains" : {
+          "description" : "Case-insensitive match on merchant/description",
+          "type" : "string"
+        },
+        "min_amount" : {
+          "description" : "Only transactions at least this large (absolute dollars)",
+          "type" : "number"
+        },
+        "limit" : {
+          "description" : "Max rows to return, 1-100 (default 25). Totals always cover every match.",
+          "type" : "integer"
+        }
+      }
+    },
+    "name" : "search_transactions",
+    "description" : "Find the client's transactions with filters. Returns matching rows (newest first) plus totals computed over every match."
+  }, {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : {
+        "since" : {
+          "description" : "Start date inclusive, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "until" : {
+          "description" : "End date inclusive, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "direction" : {
+          "description" : "outflow = money out, inflow = money in",
+          "type" : "string",
+          "enum" : [ "outflow", "inflow", "all" ]
+        },
+        "account_id" : {
+          "description" : "Limit to one accountId",
+          "type" : "string"
+        },
+        "merchant_contains" : {
+          "description" : "Case-insensitive match on merchant/description",
+          "type" : "string"
+        },
+        "group_by" : {
+          "description" : "How to group",
+          "type" : "string",
+          "enum" : [ "merchant", "category", "month", "account" ]
+        }
+      },
+      "required" : [ "group_by" ]
+    },
+    "name" : "summarize_transactions",
+    "description" : "Group the client's transactions and total them (by merchant, category, month or account). Use this instead of adding up numbers yourself."
+  }, {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : {
+        "a_since" : {
+          "description" : "Period A start, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "a_until" : {
+          "description" : "Period A end, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "b_since" : {
+          "description" : "Period B start, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "b_until" : {
+          "description" : "Period B end, YYYY-MM-DD",
+          "type" : "string"
+        },
+        "direction" : {
+          "description" : "outflow = money out, inflow = money in",
+          "type" : "string",
+          "enum" : [ "outflow", "inflow" ]
+        },
+        "account_id" : {
+          "description" : "Limit to one accountId",
+          "type" : "string"
+        },
+        "merchant_contains" : {
+          "description" : "Case-insensitive match on merchant/description",
+          "type" : "string"
+        }
+      },
+      "required" : [ "a_since", "a_until", "b_since", "b_until" ]
+    },
+    "name" : "compare_periods",
+    "description" : "Compare transaction totals between two date ranges; returns both totals, the difference and the percent change."
+  }, {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "name" : "get_holdings",
+    "description" : "Investment holdings and securities."
+  }, {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "name" : "get_liabilities",
+    "description" : "Credit cards, mortgages and student loans."
+  }, {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "name" : "get_relationship_notes",
+    "description" : "CRM context: last meeting notes, segment, tenure, products such as CDs, and tracked promises with due status."
+  }, {
+    "input_schema" : {
+      "type" : "object",
+      "properties" : {
+        "section" : {
+          "description" : "Brief section to change",
+          "type" : "string",
+          "enum" : [ "changedSinceLastMeeting", "watchOuts", "opportunities", "talkingPoints" ]
+        },
+        "action" : {
+          "description" : "ADD a new item, REPLACE an existing one, or REMOVE one",
+          "type" : "string",
+          "enum" : [ "ADD", "REPLACE", "REMOVE" ]
+        },
+        "index" : {
+          "description" : "0-based index of the item to REPLACE or REMOVE, as listed in the brief",
+          "type" : "integer"
+        },
+        "text" : {
+          "description" : "New item text for ADD or REPLACE",
+          "type" : "string"
+        },
+        "severity" : {
+          "description" : "Watch-out severity (required when adding a watch-out)",
+          "type" : "string",
+          "enum" : [ "high", "med", "low" ]
+        },
+        "citations" : {
+          "description" : "IDs supporting the item (accountId, transactionId, productType or promiseId). Required except for talkingPoints and REMOVE.",
+          "items" : {
+            "type" : "string"
+          },
+          "type" : "array"
+        },
+        "reason" : {
+          "description" : "One sentence the RM sees explaining why",
+          "type" : "string"
+        }
+      },
+      "required" : [ "section", "action", "reason" ]
+    },
+    "name" : "propose_brief_edit",
+    "description" : "Propose one change to the brief. The RM sees it and decides whether to apply it; it is never applied automatically. Call once per change."
+  } ]
+}

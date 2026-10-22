@@ -10,9 +10,11 @@ Respond with ONLY the JSON brief object. No text outside the JSON.
 
 ----------------------------------------------------------------------
 Placeholders (filled at runtime by SynthesisService):
-  {crmContextJson}   — pretty-printed CRM context (name, segment, tenure,
+  {crmContextJson}   — compact JSON CRM context (name, segment, tenure,
                        last meeting notes, open promises, synthetic products)
   {lastMeetingDate}  — the date deltas were computed against
-  {changeReportJson} — pretty-printed deterministic ChangeReport (account
-                       summaries, large outflows, maturity alerts, dormancy).
+  {changeReportJson} — compact JSON deterministic ChangeReport (account
+                       summaries, large outflows, maturity alerts, dormancy,
+                       open promises with Java-computed due status).
                        This is the ONLY numeric source the model may cite.
+JSON is sent compact (not pretty-printed): indentation is billed as input tokens.
