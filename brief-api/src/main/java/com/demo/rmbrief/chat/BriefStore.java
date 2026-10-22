@@ -30,7 +30,9 @@ public class BriefStore {
 
     public record VersionInfo(int version, String createdBy, String changeNote, Instant createdAt) {}
 
-    public record View(long briefId, String clientId, int version, int currentVersion, BriefSchema content,
+    public record Summary(long briefId, Instant createdAt, int currentVersion) {}
+
+    public record View(long briefId, String clientId, Instant createdAt, int version, int currentVersion, BriefSchema content,
                        ChangeReport changeReport, Map<String, ChatTools.Citation> citationDetails,
                        List<VersionInfo> versions) {}
 
@@ -65,6 +67,11 @@ public class BriefStore {
         });
     }
 
+    public List<Summary> recent(String clientId) {
+        return briefs.findTop20ByClientIdOrderByCreatedAtDesc(clientId).stream()
+                .map(b -> new Summary(b.id, b.createdAt, b.currentVersion)).toList();
+    }
+
     public View view(long briefId, Integer version) {
         Brief b = find(briefId);
         int v = version == null ? b.currentVersion : version;
@@ -72,7 +79,7 @@ public class BriefStore {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Version not found"));
         List<VersionInfo> history = versions.findByBriefIdOrderByVersionDesc(briefId).stream()
                 .map(x -> new VersionInfo(x.version, x.createdBy, x.changeNote, x.createdAt)).toList();
-        return new View(b.id, b.clientId, v, b.currentVersion, read(bv.content, BriefSchema.class),
+        return new View(b.id, b.clientId, b.createdAt, v, b.currentVersion, read(bv.content, BriefSchema.class),
                 read(b.changeReport, ChangeReport.class), citations(bv.citationDetails), history);
     }
 

@@ -184,7 +184,7 @@
     <div class="tagline">Post-meeting capture · reviewed before it reaches the CRM</div>
   </div>
   <nav>
-    <a href="/">Pre-meeting brief</a>
+    <a href="/" id="brief-link">Pre-meeting brief</a>
     <a href="/capture.html" class="active">Meeting capture</a>
   </nav>
 </header>
@@ -305,6 +305,11 @@ const CATEGORY = {
       `<option value="${esc(c.clientId)}">${esc(c.fullName)} · ${esc(c.segment)}</option>`).join('');
     const pre = new URLSearchParams(location.search).get('client');
     if (pre) document.getElementById('client').value = pre;
+    const syncBriefLink = () => {
+      document.getElementById('brief-link').href = '/?client=' + encodeURIComponent(document.getElementById('client').value);
+    };
+    document.getElementById('client').addEventListener('change', syncBriefLink);
+    syncBriefLink();
   } catch (e) { toast('Could not load clients: ' + e.message, true); }
   await loadPolicy();
   await loadList();

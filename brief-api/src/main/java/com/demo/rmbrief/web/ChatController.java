@@ -34,6 +34,11 @@ public class ChatController {
 
     public record ApplyRequest(int baseVersion, BriefEdit edit) {}
 
+    @GetMapping("/briefs/saved")
+    public List<BriefStore.Summary> recent(@RequestParam String clientId) {
+        return store.recent(clientId);
+    }
+
     @GetMapping("/briefs/saved/{briefId}")
     public BriefStore.View brief(@PathVariable long briefId, @RequestParam(required = false) Integer version) {
         return store.view(briefId, version);

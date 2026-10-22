@@ -373,6 +373,7 @@
       <option value="">Loading clients…</option>
     </select>
     <button class="btn" id="generate-btn" onclick="generate()" disabled>Generate Brief</button>
+    <select id="saved-briefs" style="display:none;max-width:260px" aria-label="Saved briefs"></select>
     <button class="btn" id="print-btn" onclick="window.print()" style="display:none;">Print / Save as PDF</button>
     <button class="btn secondary" id="chat-btn" onclick="openChat()" style="display:none;">💬 Ask about this brief</button>
     <div class="status-dot" id="status-dot"></div>
@@ -434,14 +435,28 @@
     sel.innerHTML = clients.map(c =>
       `<option value="${escHtml(c.clientId)}">${escHtml(c.fullName)} · ${escHtml(c.segment)}</option>`
     ).join('');
-    const pre = new URLSearchParams(location.search).get('client');
+    const params = new URLSearchParams(location.search);
+    const pre = params.get('client');
     if (pre && clients.some(c => c.clientId === pre)) sel.value = pre;
     const syncCaptureLink = () => {
       document.getElementById('capture-link').href = '/capture.html?client=' + encodeURIComponent(sel.value);
     };
-    sel.addEventListener('change', syncCaptureLink);
+    sel.addEventListener('change', () => {
+      syncCaptureLink();
+      showEmptyBrief();
+      loadSavedBriefs(sel.value, true);
+    });
     syncCaptureLink();
     document.getElementById('generate-btn').disabled = false;
+
+    // Saved briefs survive navigation: reopen the one in the URL, else the client's latest.
+    const briefParam = Number(params.get('brief'));
+    if (briefParam) {
+      await openSavedBrief(briefParam);
+      loadSavedBriefs(sel.value, false);
+    } else {
+      loadSavedBriefs(sel.value, true);
+    }
   } catch (e) {
     document.getElementById('client-select').innerHTML = '<option>Failed to load clients</option>';
   }
@@ -512,9 +527,11 @@ async function generate() {
       }
 
       if (evtName === 'brief_saved') {
-        currentBrief = { briefId: data.briefId, version: data.version, currentVersion: data.version, versions: [] };
+        currentBrief = { briefId: data.briefId, version: data.version, currentVersion: data.version, versions: [], createdAt: new Date().toISOString() };
         renderBrief(briefContent);
         document.getElementById('chat-btn').style.display = 'inline-block';
+        rememberBrief();
+        loadSavedBriefs(clientId, false);
         return;
       }
 
@@ -747,7 +764,9 @@ function renderVersionBar() {
   const opts = (cb.versions.length ? cb.versions : [{ version: cb.currentVersion }]).map(v =>
     `<option value="${v.version}" ${v.version === cb.version ? 'selected' : ''}>v${v.version}${v.version === cb.currentVersion ? ' (latest)' : ''}</option>`).join('');
   const viewing = cb.versions.find(v => v.version === cb.version);
-  const note = viewing ? `${escHtml(viewing.changeNote || '')} · ${escHtml(viewing.createdBy)}` : 'Generated';
+  const note = viewing && viewing.version > 1
+    ? `${escHtml(viewing.changeNote || '')} · ${escHtml(viewing.createdBy)} · ${escHtml(fmtWhen(viewing.createdAt))}`
+    : `Generated ${escHtml(fmtWhen(cb.createdAt))}`;
   return `<div class="version-bar">
     <span>Brief #${cb.briefId}</span>
     <select onchange="loadVersion(Number(this.value))" aria-label="Brief version">${opts}</select>
@@ -770,9 +789,76 @@ async function loadVersion(v) {
 function applyView(view) {
   buildCitationIndex(view.changeReport);
   Object.assign(citationIndex, view.citationDetails || {});
-  currentBrief = { briefId: view.briefId, version: view.version, currentVersion: view.currentVersion, versions: view.versions };
+  currentBrief = { briefId: view.briefId, version: view.version, currentVersion: view.currentVersion,
+                   versions: view.versions, createdAt: view.createdAt };
   renderBrief(view.content);
+  rememberBrief();
 }
+
+// ── Saved briefs ──────────────────────────────────────────────────────────────
+function fmtWhen(iso) {
+  return iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
+}
+
+/** Puts the open brief in the URL so back/forward and reloads return to it. */
+function rememberBrief() {
+  if (!currentBrief) return;
+  const client = document.getElementById('client-select').value;
+  history.replaceState(null, '', `/?client=${encodeURIComponent(client)}&brief=${currentBrief.briefId}`);
+}
+
+function showEmptyBrief() {
+  if (evtSource) evtSource.close();
+  currentBrief = null;
+  briefContent = null;
+  closeChat();
+  resetChat();
+  ['print-btn', 'chat-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+  setStatus('', '');
+  history.replaceState(null, '', '/?client=' + encodeURIComponent(document.getElementById('client-select').value));
+  document.getElementById('brief-panel').innerHTML =
+    '<div class="brief-placeholder"><div class="ph-icon">📋</div><p>Your brief will appear here.</p></div>';
+}
+
+async function loadSavedBriefs(clientId, openLatest) {
+  const sel = document.getElementById('saved-briefs');
+  let list = [];
+  try {
+    const res = await fetch('/briefs/saved?clientId=' + encodeURIComponent(clientId));
+    if (res.ok) list = await res.json();
+  } catch (e) { /* the picker is a convenience; generating still works */ }
+  if (clientId !== document.getElementById('client-select').value) return;
+  sel.style.display = list.length ? 'inline-block' : 'none';
+  sel.innerHTML = '<option value="">Saved briefs (' + list.length + ')</option>' + list.map(b =>
+    `<option value="${b.briefId}" ${currentBrief && currentBrief.briefId === b.briefId ? 'selected' : ''}>#${b.briefId} · ${escHtml(fmtWhen(b.createdAt))} · v${b.currentVersion}</option>`).join('');
+  if (openLatest && list.length && !currentBrief) await openSavedBrief(list[0].briefId);
+}
+
+async function openSavedBrief(briefId) {
+  try {
+    const res = await fetch(`/briefs/saved/${briefId}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const view = await res.json();
+    const clientSel = document.getElementById('client-select');
+    if (clientSel.value !== view.clientId) clientSel.value = view.clientId;
+    if (evtSource) evtSource.close();
+    closePopover();
+    resetChat();
+    applyView(view);
+    document.getElementById('feed-log').innerHTML = '';
+    addFeedItem('📂', `Opened saved brief #${view.briefId} (v${view.currentVersion}), generated ${fmtWhen(view.createdAt)}. Click Generate Brief for fresh data.`, 'muted');
+    setStatus('done', 'Saved brief');
+    document.getElementById('print-btn').style.display = 'inline-block';
+    document.getElementById('chat-btn').style.display = 'inline-block';
+    document.getElementById('saved-briefs').value = String(view.briefId);
+  } catch (e) {
+    addFeedItem('⚠️', 'Could not open saved brief: ' + e.message, '');
+  }
+}
+
+document.getElementById('saved-briefs').addEventListener('change', e => {
+  if (e.target.value) openSavedBrief(Number(e.target.value));
+});
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
 let chatHistory = [];   // text-only {role, content}; lives only in this page
