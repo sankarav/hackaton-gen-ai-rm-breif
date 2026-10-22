@@ -3,6 +3,7 @@ package com.demo.rmbrief.agent;
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.core.JsonValue;
 import com.anthropic.models.messages.*;
+import com.demo.rmbrief.chat.BriefStore;
 import com.demo.rmbrief.delta.ChangeReport;
 import com.demo.rmbrief.delta.DeltaService;
 import com.demo.rmbrief.llm.BriefSchema;
@@ -40,10 +41,12 @@ public class AgentOrchestrator {
     private final DeltaService deltaService;
     private final SynthesisService synthesisService;
     private final AnthropicClient anthropic;
+    private final BriefStore briefStore;
 
     public AgentOrchestrator(PlaidToolService plaidTools, CrmContextService crmContext,
                              DeltaService deltaService, SynthesisService synthesisService,
-                             AnthropicClient anthropic) {
+                             AnthropicClient anthropic, BriefStore briefStore) {
+        this.briefStore = briefStore;
         this.plaidTools = plaidTools;
         this.crmContext = crmContext;
         this.deltaService = deltaService;
@@ -86,6 +89,8 @@ public class AgentOrchestrator {
             emitter.step("synthesis_start", "Claude synthesizing brief from ChangeReport…");
             BriefSchema brief = synthesisService.synthesize(clientId, report);
             emitter.brief(brief);
+            BriefStore.Saved saved = briefStore.create(clientId, report, brief);
+            emitter.briefSaved(saved.briefId(), saved.version());
             emitter.step("synthesis_done", "Brief generated with " +
                 brief.watchOuts().size() + " watch-outs, " +
                 brief.opportunities().size() + " opportunities, " +

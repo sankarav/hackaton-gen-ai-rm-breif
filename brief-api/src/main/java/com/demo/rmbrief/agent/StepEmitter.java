@@ -7,6 +7,7 @@ public interface StepEmitter {
     void step(String type, String message);
     void delta(ChangeReport report);
     void brief(Object briefJson);
+    void briefSaved(long briefId, int version);
     void error(String message);
     void complete();
 }

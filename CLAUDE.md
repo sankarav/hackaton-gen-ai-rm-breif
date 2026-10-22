@@ -55,7 +55,11 @@ PLAID_ENV=sandbox
 | GET/PUT | `/policy/recording` · `/admin/recording-policy` | Compliance toggle for meeting recording (off by default) |
 | GET/POST | `/clients/{id}/promises` · `/promises/{id}/status` | Tracked promises; mark DONE / CANCELLED |
 
-UI: `/` (brief) and `/capture.html` (capture + review). Temporal Web UI: http://localhost:8233.
+| GET | `/briefs/saved/{briefId}?version=` | Saved brief version + ChangeReport + citation details + version history |
+| POST | `/briefs/saved/{briefId}/chat` | Chat turn, SSE over POST (`step`, `delta`, `proposal`, `answer`). Body: `{history, message}` |
+| POST | `/briefs/saved/{briefId}/edits` | Apply an RM-approved proposal `{baseVersion, edit}` → new version (409 if stale) |
+
+UI: `/` (brief + chat drawer) and `/capture.html` (capture + review). Temporal Web UI: http://localhost:8233.
 
 ### Hero demo reset
 
@@ -99,6 +103,10 @@ POST /captures → CaptureService (validate, encrypt media, consent) → Capture
 
 Only capture IDs cross into Temporal; content stays in Postgres and the encrypted media store. Activities are idempotent (Temporal retries them). `TRANSCRIPTION_PROVIDER=openai` + `OPENAI_API_KEY` swaps Whisper for OpenAI.
 
+### Chat about a brief (`chat/`)
+
+Each generated brief is saved (`brief` + immutable `brief_version`; SSE `brief_saved` gives the ID). Chat is **stateless on the server** — the browser sends text-only history each turn and nothing is persisted. `ChatService` runs a streaming tool-use loop (`CHAT_MODEL`), with instructions + brief context prompt-cached. `ChatTools` are read-only, bound to the brief's client, and compute every total/difference in Java. Answers cite `[[id]]`; IDs not returned by a tool or present in the brief are stripped. Brief changes are only *proposed* (`propose_brief_edit`); `BriefStore.apply` re-validates citations against live Plaid data and writes version n+1. Boundaries in the prompt: no investment/tax/legal advice, no client emails or letters.
+
 ## Package layout
 
 ```
@@ -115,8 +123,9 @@ com.demo.rmbrief/
     extract/   CaptureLlm (structured Claude calls), ExtractionService, SpeakerLabeler
     resolve/   DateResolver, ProductResolver, ResolveService — pure Java
     media/     MediaStore (AES-GCM encrypted files)
+  chat/        Brief/BriefVersion + repos, BriefStore (save/view/apply), BriefEdit, ChatTools, ChatService
   web/         BriefController (SSE), ClientController, AdminController, ToolDebugController,
-               CaptureController (SSE), PolicyController
+               CaptureController (SSE), PolicyController, ChatController (SSE over POST)
   config/      FlywayConfig (explicit bean — required for Spring Boot 4), RedisConfig, TemporalConfig
 ```
 
@@ -156,7 +165,7 @@ Static UI is a single file at `brief-api/src/main/resources/static/index.html` (
 - **Temporal dev server image runs as uid 1000** — its volume is mounted at `/home/temporal` so the SQLite file is writable.
 - **Plaid sandbox items expire** (`ITEM_LOGIN_REQUIRED`) — re-seed with `force:true`. Capture still works; product matching falls back to CRM products.
 - Shorten timers for demos: `CAPTURE_REVIEW_REMINDER`, `CAPTURE_RETENTION_NOTES`, `CAPTURE_RETENTION_RECORDING` (e.g. `45s`).
-- Models are set in `application.yml`, never in code: `BRIEF_MODEL` (brief synthesis), `AGENT_MODEL` (tool planning when `eager-tool-calls=false`), `CAPTURE_MODEL` (capture vision, speaker labels, extraction). Newer models think by default and thinking is billed as output, so keep `maxTokens` generous (16000). Every Claude call logs `[llm] <purpose> model= in= out=` for cost tracking.
+- Models are set in `application.yml`, never in code: `BRIEF_MODEL` (brief synthesis), `AGENT_MODEL` (tool planning when `eager-tool-calls=false`), `CHAT_MODEL` (brief chat), `CAPTURE_MODEL` (capture vision, speaker labels, extraction). Newer models think by default and thinking is billed as output, so keep `maxTokens` generous (16000). Every Claude call logs `[llm] <purpose> model= in= out=` for cost tracking.
 
 ## Configurable thresholds (application.yml)
 

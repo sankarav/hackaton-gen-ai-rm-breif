@@ -56,6 +56,8 @@ app:
     model: ${AGENT_MODEL:claude-sonnet-5}            # tool planning (only used when eager-tool-calls=false)
   brief:
     model: ${BRIEF_MODEL:claude-sonnet-5}            # pre-meeting brief synthesis
+  chat:
+    model: ${CHAT_MODEL:claude-sonnet-5}             # chat about a brief (Q&A + proposed edits)
   plaid:
     env: ${PLAID_ENV:sandbox}
 

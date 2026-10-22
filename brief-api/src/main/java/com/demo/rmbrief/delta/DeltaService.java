@@ -148,14 +148,7 @@ public class DeltaService {
         // ── 7. Open promises (approved captures) ─────────────────────────────
         List<ChangeReport.OpenPromise> openPromises = promises
                 .findByClientIdAndStatusOrderByDueDateAsc(clientId, ClientPromise.Status.OPEN).stream()
-                .map(p -> {
-                    Integer daysUntil = p.dueDate != null ? (int) ChronoUnit.DAYS.between(today, p.dueDate) : null;
-                    String status = daysUntil == null ? "NO_DUE_DATE"
-                            : daysUntil < 0 ? "OVERDUE"
-                            : daysUntil <= PROMISE_DUE_SOON_DAYS ? "DUE_SOON" : "OPEN";
-                    return new ChangeReport.OpenPromise(p.citationId(), p.text, p.owner,
-                            p.dueDate != null ? p.dueDate.toString() : null, daysUntil, status);
-                })
+                .map(p -> toOpenPromise(p, today))
                 .toList();
 
         ChangeReport report = new ChangeReport(
@@ -175,6 +168,15 @@ public class DeltaService {
         log.info("[delta] ChangeReport complete for {}: outflows={} maturityAlerts={} dormant={} openPromises={}",
                 clientId, largeOutflows.size(), maturityAlerts.size(), dormant, openPromises.size());
         return report;
+    }
+
+    public static ChangeReport.OpenPromise toOpenPromise(ClientPromise p, LocalDate today) {
+        Integer daysUntil = p.dueDate != null ? (int) ChronoUnit.DAYS.between(today, p.dueDate) : null;
+        String status = daysUntil == null ? "NO_DUE_DATE"
+                : daysUntil < 0 ? "OVERDUE"
+                : daysUntil <= PROMISE_DUE_SOON_DAYS ? "DUE_SOON" : "OPEN";
+        return new ChangeReport.OpenPromise(p.citationId(), p.text, p.owner,
+                p.dueDate != null ? p.dueDate.toString() : null, daysUntil, status);
     }
 
     // ── safe extraction helpers ───────────────────────────────────────────────

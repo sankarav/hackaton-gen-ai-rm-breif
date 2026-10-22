@@ -154,8 +154,7 @@ public class SynthesisService {
         }
 
         // Validate and strip citations that don't resolve to real IDs
-        Set<String> validIds = buildValidIdSet(report);
-        brief = validateCitations(brief, validIds);
+        brief = validateCitations(brief, report.citationIds());
 
         log.info("[synthesis] complete for clientId={} watchOuts={} opportunities={} talkingPoints={}",
                 clientId,
@@ -167,20 +166,6 @@ public class SynthesisService {
     }
 
     // ── citation validation ───────────────────────────────────────────────────
-
-    private Set<String> buildValidIdSet(ChangeReport report) {
-        Set<String> ids = new HashSet<>();
-        report.accountSummaries().forEach(a -> ids.add(a.accountId()));
-        report.largeOutflows().forEach(o -> {
-            ids.add(o.transactionId());
-            ids.add(o.accountId());
-        });
-        // Maturity alerts have no Plaid ID — allow productType as a citation key
-        report.maturityAlerts().forEach(m -> ids.add(m.productType()));
-        report.openPromises().forEach(p -> ids.add(p.promiseId()));
-        log.debug("[synthesis] valid citation IDs: {}", ids);
-        return ids;
-    }
 
     private BriefSchema validateCitations(BriefSchema brief, Set<String> validIds) {
         int stripped = 0;

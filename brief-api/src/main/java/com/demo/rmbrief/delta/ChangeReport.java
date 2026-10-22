@@ -33,6 +33,19 @@ public record ChangeReport(
         List<OpenPromise> openPromises
 ) {
 
+    /** Every ID a brief may cite: accounts, transactions, maturing product types, open promises. */
+    public java.util.Set<String> citationIds() {
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        accountSummaries.forEach(a -> ids.add(a.accountId()));
+        largeOutflows.forEach(o -> {
+            ids.add(o.transactionId());
+            ids.add(o.accountId());
+        });
+        maturityAlerts.forEach(m -> ids.add(m.productType()));
+        if (openPromises != null) openPromises.forEach(p -> ids.add(p.promiseId()));
+        return ids;
+    }
+
     /**
      * An open follow-up commitment. Citation = promiseId ("promise-{id}").
      * status: OVERDUE | DUE_SOON (within 7 days) | OPEN | NO_DUE_DATE.

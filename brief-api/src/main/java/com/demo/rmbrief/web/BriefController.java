@@ -66,6 +66,11 @@ public class BriefController {
             }
 
             @Override
+            public void briefSaved(long briefId, int version) {
+                send("brief_saved", Map.of("briefId", briefId, "version", version));
+            }
+
+            @Override
             public void error(String message) {
                 send("error", Map.of("message", message));
                 emitter.completeWithError(new RuntimeException(message));

@@ -288,9 +288,58 @@
   }
   .promise::before { content: "↳"; color: #d97706; flex-shrink: 0; font-weight: 700; }
 
+  /* Version bar */
+  .version-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: #6b7a99; background: white; border-radius: 10px; padding: 10px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .version-bar select { padding: 4px 8px; border: 1.5px solid #d0d7e3; border-radius: 6px; font-size: 12.5px; }
+  .version-bar .readonly { color: #b45309; font-weight: 600; }
+  .version-bar .note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Chat drawer */
+  .btn.secondary { background: white; color: #1a2332; border: 1.5px solid #d0d7e3; }
+  .btn.secondary:hover { background: #f4f6f9; }
+  .chat-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: 440px; max-width: 100vw; background: #f8f9fc; box-shadow: -4px 0 24px rgba(10,35,66,0.18); transform: translateX(105%); transition: transform 0.2s ease; z-index: 50; display: flex; flex-direction: column; }
+  .chat-drawer.open { transform: translateX(0); }
+  @media (min-width: 1200px) { body.chat-open main { margin-right: 456px; margin-left: 16px; } }
+  .chat-head { background: #0a2342; color: white; padding: 14px 16px; display: flex; align-items: center; gap: 8px; }
+  .chat-head .title { font-weight: 700; font-size: 15px; flex: 1; }
+  .chat-head .sub { font-size: 11px; color: #8ba7c7; }
+  .chat-head button { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+  .chat-head button:hover { background: rgba(255,255,255,0.2); }
+  .chat-msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .chat-empty { color: #6b7a99; font-size: 13px; line-height: 1.5; }
+  .suggestions { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .suggestions button { text-align: left; background: white; border: 1.5px solid #d0d7e3; border-radius: 8px; padding: 8px 11px; font-size: 13px; cursor: pointer; color: #1a2332; }
+  .suggestions button:hover { border-color: #2563eb; background: #eef3ff; }
+  .msg { max-width: 92%; font-size: 13.5px; line-height: 1.55; }
+  .msg.user { align-self: flex-end; background: #2563eb; color: white; padding: 8px 12px; border-radius: 12px 12px 2px 12px; white-space: pre-wrap; }
+  .msg.bot { align-self: flex-start; background: white; padding: 10px 13px; border-radius: 12px 12px 12px 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .msg.bot p { margin: 0 0 8px; } .msg.bot p:last-child { margin-bottom: 0; }
+  .msg.bot ul { margin: 0 0 8px 18px; }
+  .msg .steps { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+  .msg .step { font-size: 11.5px; color: #6b7a99; }
+  .msg .err { color: #b91c1c; font-size: 12.5px; }
+  .typing { display: inline-block; width: 6px; height: 14px; background: #2563eb; animation: pulse 1s infinite; vertical-align: middle; }
+  .cite { font-size: 10px; background: #f0f4ff; color: #3b5bdb; border: 1px solid #c5d0f5; border-radius: 4px; padding: 0 5px; margin: 0 1px; cursor: pointer; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; font-family: inherit; }
+  .cite:hover { background: #dbe4ff; }
+  .proposal { align-self: stretch; background: white; border: 1.5px solid #c7d2fe; border-radius: 10px; padding: 11px 13px; font-size: 13px; display: flex; flex-direction: column; gap: 7px; }
+  .proposal .p-head { font-weight: 700; color: #3730a3; font-size: 12.5px; }
+  .proposal .p-text { border-radius: 6px; padding: 6px 9px; line-height: 1.45; }
+  .proposal .p-before { background: #fef2f2; color: #7f1d1d; text-decoration: line-through; }
+  .proposal .p-after { background: #f0fdf4; color: #14532d; }
+  .proposal .p-reason { font-size: 12px; color: #6b7a99; font-style: italic; }
+  .proposal .p-actions { display: flex; gap: 6px; }
+  .proposal .p-status { font-size: 12px; font-weight: 600; }
+  .proposal.done { border-color: #bbf7d0; } .proposal.dismissed { opacity: 0.5; }
+  .chat-input { border-top: 1px solid #e5e7eb; background: white; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .chat-input textarea { width: 100%; resize: none; border: 1.5px solid #d0d7e3; border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13.5px; min-height: 42px; max-height: 140px; outline: none; }
+  .chat-input textarea:focus { border-color: #2563eb; }
+  .chat-input .row { display: flex; align-items: center; gap: 8px; }
+  .chat-input .hint { flex: 1; font-size: 11px; color: #9ca3af; }
+
   /* Print: brief content only, no chrome / activity feed / whitespace columns */
   @media print {
-    header, .controls, .feed-panel, #print-btn, #citation-popover { display: none !important; }
+    header, .controls, .feed-panel, #print-btn, #citation-popover, .chat-drawer, .version-bar { display: none !important; }
+    body.chat-open main { margin: 0 !important; }
     body, main { background: #fff !important; margin: 0; padding: 0; }
     .workspace { display: block !important; }
     .brief-panel { box-shadow: none !important; }
@@ -320,6 +369,7 @@
     </select>
     <button class="btn" id="generate-btn" onclick="generate()" disabled>Generate Brief</button>
     <button class="btn" id="print-btn" onclick="window.print()" style="display:none;">Print / Save as PDF</button>
+    <button class="btn secondary" id="chat-btn" onclick="openChat()" style="display:none;">💬 Ask about this brief</button>
     <div class="status-dot" id="status-dot"></div>
     <span id="status-text" style="font-size:13px;color:#6b7a99;"></span>
   </div>
@@ -349,6 +399,26 @@
   </div>
 </main>
 
+<aside class="chat-drawer" id="chat-drawer" aria-label="Chat about this brief">
+  <div class="chat-head">
+    <div style="flex:1">
+      <div class="title">Ask about this brief</div>
+      <div class="sub">Answers cite their sources · not saved — refreshing clears it</div>
+    </div>
+    <button onclick="resetChat()" title="Start a new conversation">New chat</button>
+    <button onclick="closeChat()" aria-label="Close">✕</button>
+  </div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-input">
+    <textarea id="chat-text" rows="2" placeholder="Ask a question or ask for a change to the brief…"></textarea>
+    <div class="row">
+      <span class="hint">Enter to send · Shift+Enter for a new line</span>
+      <button class="btn secondary" id="chat-stop" style="display:none;padding:6px 14px" onclick="stopChat()">Stop</button>
+      <button class="btn" id="chat-send" style="padding:6px 16px" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</aside>
+
 <script>
 // ── Bootstrap: load client list ──────────────────────────────────────────────
 (async () => {
@@ -375,6 +445,8 @@
 // ── State ─────────────────────────────────────────────────────────────────────
 let evtSource = null;
 let citationIndex = {}; // citationId -> { label, detail }
+let currentBrief = null; // { briefId, version, currentVersion, versions, changeNote }
+let briefContent = null;
 
 // ── Generate ──────────────────────────────────────────────────────────────────
 async function generate() {
@@ -391,6 +463,11 @@ async function generate() {
   setStatus('running', 'Connecting…');
   document.getElementById('generate-btn').disabled = true;
   document.getElementById('print-btn').style.display = 'none';
+  document.getElementById('chat-btn').style.display = 'none';
+  currentBrief = null;
+  briefContent = null;
+  closeChat();
+  resetChat();
 
   // POST to register intent (optional — SSE does the work)
   await fetch(`/briefs/${clientId}`, { method: 'POST' }).catch(() => {});
@@ -410,6 +487,7 @@ async function generate() {
     synthesis_start: ['🤖', 'highlight'],
     synthesis_done:  ['🤖', 'success'],
     brief:           null,   // silent — rendered separately
+    brief_saved:     null,   // silent — enables chat
     done:            ['🏁', 'done-text'],
     error:           ['💥', ''],
   };
@@ -425,6 +503,13 @@ async function generate() {
 
       if (evtName === 'brief') {
         renderBrief(data);
+        return;
+      }
+
+      if (evtName === 'brief_saved') {
+        currentBrief = { briefId: data.briefId, version: data.version, currentVersion: data.version, versions: [] };
+        renderBrief(briefContent);
+        document.getElementById('chat-btn').style.display = 'inline-block';
         return;
       }
 
@@ -560,8 +645,10 @@ function closePopover() {
 
 // ── Brief renderer ────────────────────────────────────────────────────────────
 function renderBrief(b) {
+  briefContent = b;
   const panel = document.getElementById('brief-panel');
   panel.innerHTML = [
+    renderVersionBar(),
     renderSnapshot(b.snapshot, b.clientId),
     renderChanged(b.changedSinceLastMeeting),
     renderWatchOuts(b.watchOuts),
@@ -647,6 +734,267 @@ function renderRecap(r) {
     </div>
   </div>`;
 }
+
+// ── Brief versions ────────────────────────────────────────────────────────────
+function renderVersionBar() {
+  if (!currentBrief) return '';
+  const cb = currentBrief;
+  const opts = (cb.versions.length ? cb.versions : [{ version: cb.currentVersion }]).map(v =>
+    `<option value="${v.version}" ${v.version === cb.version ? 'selected' : ''}>v${v.version}${v.version === cb.currentVersion ? ' (latest)' : ''}</option>`).join('');
+  const viewing = cb.versions.find(v => v.version === cb.version);
+  const note = viewing ? `${escHtml(viewing.changeNote || '')} · ${escHtml(viewing.createdBy)}` : 'Generated';
+  return `<div class="version-bar">
+    <span>Brief #${cb.briefId}</span>
+    <select onchange="loadVersion(Number(this.value))" aria-label="Brief version">${opts}</select>
+    <span class="note" title="${note}">${note}</span>
+    ${cb.version !== cb.currentVersion ? '<span class="readonly">Viewing an older version (read-only)</span>' : ''}
+  </div>`;
+}
+
+async function loadVersion(v) {
+  if (!currentBrief) return;
+  try {
+    const res = await fetch(`/briefs/saved/${currentBrief.briefId}?version=${v}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    applyView(await res.json());
+  } catch (e) {
+    alert('Could not load that version: ' + e.message);
+  }
+}
+
+function applyView(view) {
+  buildCitationIndex(view.changeReport);
+  Object.assign(citationIndex, view.citationDetails || {});
+  currentBrief = { briefId: view.briefId, version: view.version, currentVersion: view.currentVersion, versions: view.versions };
+  renderBrief(view.content);
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+let chatHistory = [];   // text-only {role, content}; lives only in this page
+let chatAbort = null;
+const SECTION_LABEL = { changedSinceLastMeeting: 'Changed since last meeting', watchOuts: 'Watch-outs', opportunities: 'Opportunities', talkingPoints: 'Talking points' };
+const SUGGESTIONS = [
+  'What changed most since the last meeting?',
+  'Break down spending by category for the last 3 months',
+  'Which promises are overdue or due soon?',
+  'Make the talking points more conversational',
+];
+
+function openChat() {
+  if (!currentBrief) return;
+  document.getElementById('chat-drawer').classList.add('open');
+  document.body.classList.add('chat-open');
+  if (!document.getElementById('chat-msgs').children.length) renderChatEmpty();
+  document.getElementById('chat-text').focus();
+}
+
+function closeChat() {
+  document.getElementById('chat-drawer').classList.remove('open');
+  document.body.classList.remove('chat-open');
+}
+
+function resetChat() {
+  stopChat();
+  chatHistory = [];
+  document.getElementById('chat-msgs').innerHTML = '';
+  if (document.getElementById('chat-drawer').classList.contains('open')) renderChatEmpty();
+}
+
+function stopChat() {
+  if (chatAbort) chatAbort.abort();
+}
+
+function renderChatEmpty() {
+  const box = document.getElementById('chat-msgs');
+  box.innerHTML = `<div class="chat-empty">Ask about anything behind this brief — balances, transactions, promises — or ask for changes.
+    Numbers are computed by the system, not the AI, and every fact links to its source. Suggested changes only apply when you click <b>Apply</b>.
+    <div class="suggestions">${SUGGESTIONS.map(s => `<button type="button" data-q="${escHtml(s)}">${escHtml(s)}</button>`).join('')}</div></div>`;
+  box.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', () => sendChat(b.dataset.q)));
+}
+
+const chatInput = document.getElementById('chat-text');
+chatInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
+});
+
+async function sendChat(preset) {
+  const text = (preset ?? chatInput.value).trim();
+  if (!text || chatAbort || !currentBrief) return;
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+
+  const box = document.getElementById('chat-msgs');
+  if (!chatHistory.length) box.innerHTML = '';
+  const user = document.createElement('div');
+  user.className = 'msg user';
+  user.textContent = text;
+  box.appendChild(user);
+
+  const bot = document.createElement('div');
+  bot.className = 'msg bot';
+  bot.innerHTML = '<div class="steps"></div><div class="body"><span class="typing"></span></div>';
+  box.appendChild(bot);
+  const steps = bot.querySelector('.steps');
+  const body = bot.querySelector('.body');
+  box.scrollTop = box.scrollHeight;
+
+  setChatBusy(true);
+  chatAbort = new AbortController();
+  let streamed = '';
+  let finalText = null;
+  let proposals = 0;
+  try {
+    const res = await fetch(`/briefs/saved/${currentBrief.briefId}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ history: chatHistory, message: text }),
+      signal: chatAbort.signal,
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j.message || 'HTTP ' + res.status);
+    }
+    await readSse(res, (event, data) => {
+      if (event === 'step') {
+        const s = document.createElement('div');
+        s.className = 'step';
+        s.textContent = '⚙️ ' + data.message;
+        steps.appendChild(s);
+      } else if (event === 'delta') {
+        streamed += data.text;
+        body.innerHTML = renderChatText(streamed, null) + '<span class="typing"></span>';
+      } else if (event === 'proposal') {
+        proposals++;
+        box.appendChild(renderProposal(data));
+      } else if (event === 'answer') {
+        finalText = data.text;
+        Object.assign(citationIndex, data.citations || {});
+        body.innerHTML = finalText ? renderChatText(finalText, data.citations || {}) : '';
+      } else if (event === 'error') {
+        throw new Error(data.message);
+      }
+      box.scrollTop = box.scrollHeight;
+    });
+    if (finalText !== null) {
+      chatHistory.push({ role: 'user', content: text },
+                       { role: 'assistant', content: finalText || (proposals ? '(Proposed changes to the brief.)' : '(No answer.)') });
+      // The server caps history; keep the most recent exchanges.
+      while (chatHistory.length > 28) chatHistory.splice(0, 2);
+    }
+  } catch (e) {
+    body.innerHTML = (streamed ? renderChatText(streamed, null) : '') +
+      `<div class="err">${e.name === 'AbortError' ? 'Stopped.' : escHtml(e.message)}</div>`;
+  } finally {
+    chatAbort = null;
+    setChatBusy(false);
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+function setChatBusy(busy) {
+  document.getElementById('chat-send').style.display = busy ? 'none' : 'inline-block';
+  document.getElementById('chat-stop').style.display = busy ? 'inline-block' : 'none';
+}
+
+async function readSse(res, onEvent) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let idx;
+    while ((idx = buf.search(/\r?\n\r?\n/)) >= 0) {
+      const chunk = buf.slice(0, idx);
+      buf = buf.slice(idx).replace(/^\r?\n\r?\n/, '');
+      let event = 'message';
+      const data = [];
+      chunk.split(/\r?\n/).forEach(line => {
+        if (line.startsWith('event:')) event = line.slice(6).trim();
+        else if (line.startsWith('data:')) data.push(line.slice(5));
+      });
+      if (data.length) onEvent(event, JSON.parse(data.join('\n')));
+    }
+  }
+}
+
+/** Minimal, escape-first markdown. While streaming (cites === null) citation markers are hidden; final text gets chips. */
+function renderChatText(text, cites) {
+  let html = escHtml(text).replace(/\[\[([^\[\]\s]{1,120})\]\]/g, (_, id) => {
+    if (cites === null) return '';
+    const entry = cites[id] || citationIndex[id];
+    return `<button type="button" class="cite" data-cite="${id}" title="${id}">${escHtml(entry ? entry.label : id)}</button>`;
+  });
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  const bullet = /^\s*[-*•]\s+/;
+  return html.split(/\n{2,}/).map(block => {
+    let out = '', text = [], items = [];
+    const flushText = () => { if (text.length) out += '<p>' + text.join('<br>') + '</p>'; text = []; };
+    const flushList = () => { if (items.length) out += '<ul>' + items.map(i => '<li>' + i + '</li>').join('') + '</ul>'; items = []; };
+    block.split('\n').forEach(l => {
+      if (bullet.test(l)) { flushText(); items.push(l.replace(bullet, '')); }
+      else { flushList(); text.push(l); }
+    });
+    flushText();
+    flushList();
+    return out;
+  }).join('');
+}
+
+function renderProposal(p) {
+  const e = p.edit;
+  const card = document.createElement('div');
+  card.className = 'proposal';
+  const verb = { ADD: 'Add to', REPLACE: 'Rewrite in', REMOVE: 'Remove from' }[e.action] || e.action;
+  card.innerHTML = `
+    <div class="p-head">✏️ Suggested change · ${escHtml(verb)} ${escHtml(SECTION_LABEL[e.section] || e.section)}${e.severity ? ' · ' + escHtml(e.severity) : ''}</div>
+    ${p.before != null ? `<div class="p-text p-before">${escHtml(p.before)}</div>` : ''}
+    ${e.action !== 'REMOVE' ? `<div class="p-text p-after">${escHtml(e.text)}</div>` : ''}
+    ${e.reason ? `<div class="p-reason">${escHtml(e.reason)}</div>` : ''}
+    ${(e.citations || []).length ? `<div>${e.citations.map(id => `<button type="button" class="cite" data-cite="${escHtml(id)}">${escHtml((citationIndex[id] || {}).label || id)}</button>`).join('')}</div>` : ''}
+    <div class="p-actions"><button class="btn" style="padding:5px 14px;font-size:12.5px">Apply</button><button class="btn secondary" style="padding:5px 14px;font-size:12.5px">Dismiss</button></div>
+    <div class="p-status"></div>`;
+  const [apply, dismiss] = card.querySelectorAll('.p-actions button');
+  const status = card.querySelector('.p-status');
+  apply.addEventListener('click', async () => {
+    apply.disabled = dismiss.disabled = true;
+    try {
+      const res = await fetch(`/briefs/saved/${currentBrief.briefId}/edits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseVersion: p.baseVersion, edit: e }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.message || 'HTTP ' + res.status);
+      applyView(j);
+      card.classList.add('done');
+      card.querySelector('.p-actions').remove();
+      status.style.color = '#15803d';
+      status.textContent = `Applied — the brief is now v${j.version}.`;
+    } catch (err) {
+      status.style.color = '#b91c1c';
+      status.textContent = err.message;
+      dismiss.disabled = false;
+    }
+  });
+  dismiss.addEventListener('click', () => {
+    card.classList.add('dismissed');
+    card.querySelector('.p-actions').remove();
+    status.textContent = 'Dismissed.';
+  });
+  return card;
+}
+
+// Citation chips in chat and proposals use data attributes (never inline handlers) — streamed text is untrusted.
+document.addEventListener('click', e => {
+  const chip = e.target.closest('[data-cite]');
+  if (chip) showCitation(e, chip.dataset.cite);
+});
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function section(icon, title, innerHtml) {

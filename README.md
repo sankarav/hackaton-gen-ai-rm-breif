@@ -105,6 +105,16 @@ curl -X POST http://localhost:8080/admin/seed-client \
 | GET/PUT | `/policy/recording` · `/admin/recording-policy` | Compliance toggle for meeting recording |
 | GET | `/clients/{id}/promises` | Open promises tracked from approved captures |
 
+## Chat about a brief
+
+After a brief is generated, **💬 Ask about this brief** opens a chat drawer. The RM can ask
+questions ("how much went to United Airlines, by month?") and ask for changes ("add a watch-out
+about…"). Claude answers through read-only tools scoped to that client; every total and comparison
+is computed in Java, and every fact carries a clickable, validated citation. Changes are shown as
+proposals with **Apply / Dismiss**; applying one saves a new brief version (older versions stay
+viewable). Chat is not stored — refreshing clears it. Claude declines investment advice and
+drafting client emails.
+
 ## Post-meeting capture (Phase 2)
 
 Open **http://localhost:8080/capture.html** after a meeting. The RM adds any mix of typed notes,
@@ -134,7 +144,7 @@ http://localhost:8233.
 | API | Java 21 / Spring Boot 4.0 / Maven |
 | Database | PostgreSQL 16 (schema + seed via Flyway) |
 | Cache | Redis 7 (wired, off by default) |
-| Runtime LLM | Claude via `anthropic-java`; models set in `application.yml` (`BRIEF_MODEL`, `AGENT_MODEL`, `CAPTURE_MODEL`) |
+| Runtime LLM | Claude via `anthropic-java`; models set in `application.yml` (`BRIEF_MODEL`, `AGENT_MODEL`, `CHAT_MODEL`, `CAPTURE_MODEL`) |
 | Orchestration | Temporal (`temporal-sdk` 1.40.0; dev server in compose) |
 | Speech-to-text | Self-hosted Whisper container (switchable to OpenAI via config) |
 | Financial data | Plaid Sandbox via `plaid-java` 35.0.0 |
